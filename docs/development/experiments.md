@@ -1,18 +1,18 @@
 # Demo experiments
 
-Status: proposed on 2026-11-06. No demos are implemented yet. Deployment target: [GitHub Pages](github-pages.md). The following designs are our synthesis of the [knowledge base](../knowledge/README.md), not claims that these experiments already work.
+Status updated 2026-11-06: the first three investigations now have initial interactive implementations across **Page garden** and **Shape & letter**. Fine-grained growth instrumentation and comparative quality evaluation remain research work. Deployment target: [GitHub Pages](github-pages.md); a live publication has not been verified. The questions below are our synthesis of the [knowledge base](../knowledge/README.md).
 
-## Suggested sequence
+## Implementation status and next questions
 
-| Order | Demo | Question | Controls and evidence |
+| Order | Investigation | Current implementation | Next research |
 | --- | --- | --- | --- |
-| 1 | Floral specimen desk | Can we quickly obtain reproducible, exportable browser results through Florilegium's supported interface? | Seed, palette, season, page proportions; SVG export and shareable settings; startup/error handling and subpath smoke test. |
-| 2 | Watch a panel grow | How does empty-space selection influence hierarchy? | Seed/root, density, minimum size and region; step/pause, free-disc/proxy overlays, accepted/rejected proposals. Build a small independent generator for this instrumentation. |
-| 3 | Flowers inside a letter | How does partition-first composition behave in difficult silhouettes? | Mask, sample count, flower-size bias, turn preference and relaxation; cell/graph overlays, containment and overlap reports. Resolve the implementation and reuse route before porting code. |
-| 4 | One vine, several voices | Which visual changes come from rendering versus layout? | Freeze geometry; switch outline, flat color, tapered ink and wash styles. Export each from the same scene. |
-| 5 | Living borders and wallpaper | Can motifs repeat without obvious seams or accidental stripes? | Start with bands, then plane tiles; symmetry and spacing controls; 3-by-3 repeat preview and seam inspection. |
+| 1 | Floral specimen desk | **Initial demo:** actual Florilegium Lua in a worker; seed, palette, season, visitors, A4 frame, SVG export and shared settings. | Compare composition quality across fixed seeds and rectangle proportions. |
+| 2 | Watch a panel grow | **Initial growth baseline:** Page garden fills four margins around an editable rectangle using the upstream growth method. See [adapter evidence](florilegium-frame.md). | Step/pause, free-disc overlays and accepted/rejected proposal inspection are not implemented. Study hierarchy and connections between panels. |
+| 3 | Flowers inside a letter | **Initial demo:** independent Huang-inspired sampling, cells and vine routing; preset/freehand masks, large lettering, density, flower scale and cell overlay. No Dither source is reused. | Quantify containment and overlap beyond final clipping; inspect routing and difficult silhouettes. |
+| 4 | One vine, several voices | **Proposed.** Color changes preserve the seeded geometry in the current demos. | Compare outline, flat color, tapered ink and wash renderers on a frozen scene. |
+| 5 | Living borders and wallpaper | **Proposed.** | Add repeat units, symmetry and spacing controls; inspect seams in a 3-by-3 neighborhood. |
 
-A later hybrid could reserve a few large flowers, route a coherent vine skeleton, then grow smaller leaves into remaining gaps. This is an untested hypothesis; establish the two independent baselines before combining them.
+A later hybrid could reserve a few large flowers, route a coherent vine skeleton, then grow smaller leaves into remaining gaps. This remains an untested hypothesis. Compare the existing growth and partition baselines before combining them.
 
 ## Common experiment contract
 
@@ -20,7 +20,7 @@ Each demo should save an algorithm/version identifier, seed, dimensions, paramet
 
 For new engines, separate region representation, layout, motif construction and rendering. An inspectable scene should identify elements, their parents/attachments, geometry and bounds. Give layout and visual detail separate random streams. Recoloring should not silently regenerate the composition.
 
-Use SVG as the first export target for vector demos. Canvas is available for interactive previews or expensive paint effects; report any export differences. PNG export can follow when useful. Select a framework only when the first demo needs one; TypeScript with a small static build is a candidate, not an existing dependency.
+SVG is the implemented export target. Letter masks are rasterized and converted to self-contained vector contours before generation; resulting exports preserve the selected silhouette without requiring its font. PNG export can follow when useful. The application uses React, TypeScript and Vite with browser-side worker generation.
 
 Run expensive work in a worker where needed. Tag requests so stale responses cannot replace newer settings. Provide visible progress/failure states and bounded work; distinguish cancellation from merely ignoring an obsolete result.
 

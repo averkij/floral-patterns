@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.vite/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Recreated from the pinned submodule and locked npm dependencies before builds.
+public/vendor/
+public/fonts/
+public/licenses/
+public/THIRD_PARTY_NOTICES.md
+
+# Local editor and OS files.
+.DS_Store
+Thumbs.db
+.env.local
+.env.*.local

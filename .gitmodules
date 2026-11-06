@@ -1,0 +1,3 @@
+[submodule "florilegium"]
+	path = florilegium
+	url = https://github.com/kevinraymond/florilegium

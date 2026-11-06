@@ -18,7 +18,7 @@ Our implementation requirements:
 
 ## Local build and assets
 
-Initialize the submodule with `git submodule update --init --recursive`, install the lockfile with `npm ci`, then use `npm run dev`. Use Node 24 or a version supported by the locked Vite release. Run `npm run typecheck`, `npm test`, and `npm run build` before a checkpoint. `npm run preview` serves the built site; inspect `http://127.0.0.1:4173/floral-patterns/`, including both demos, downloads and a shared-state reload.
+Initialize the submodule with `git submodule update --init --recursive`, install the lockfile with `npm ci`, then use `npm run dev`. Use Node 24 or a version supported by the locked Vite release. Run `npm run typecheck`, `npm test`, and `npm run build` before a checkpoint. `npm run preview` serves the built site; inspect `http://127.0.0.1:4173/floral-patterns/`, including both demos, downloads and a shared-state reload. Confirm that initial load and edits remain drafts until Grow pattern, the busy state covers computation/playback, and Fit/zoom leave SVG export dimensions unchanged.
 
 Vite uses the explicit `/floral-patterns/` base. The `predev` and `prebuild` hooks run `scripts/prepare-assets.mjs`, which copies the pinned Lua modules, local Wasmoon WebAssembly, fonts and license notices. These generated public files are ignored by Git. The script has no network dependency: sources come from the submodule and installed lockfile. The generated `THIRD_PARTY_NOTICES.md` records the exact runtime package versions and links to their licenses. Keep the root notices' Florilegium revision aligned with deliberate submodule updates.
 

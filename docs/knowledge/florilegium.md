@@ -2,7 +2,7 @@
 
 [Upstream](https://github.com/kevinraymond/florilegium), [playground](https://kevinraymond.github.io/florilegium/), [local submodule](../../florilegium).
 
-Reviewed local revision `9fbaf56d53e6525e02da05cd802ea7da82052099` on 2026-11-06. Documentation and code were inspected; runtime behavior and upstream performance claims were not independently benchmarked.
+Reviewed local revision `9fbaf56d53e6525e02da05cd802ea7da82052099` on 2026-11-06. The initial source review inspected documentation and code. Subsequent adapter work executes the real Lua modules in Wasmoon; implementation evidence and limitations are maintained in [the page experiment](../development/florilegium-frame.md). Upstream performance claims are not independently validated by that integration work.
 
 ## Source findings
 
@@ -21,10 +21,14 @@ The supported integration surface is the SVG command line or `require("florilegi
 | [worker.js](../../florilegium/web/worker.js) | Runtime loading and generation requests |
 | [pages.yml](../../florilegium/.github/workflows/pages.yml) | Static artifact assembly |
 
-## Proposed use here
+## Current integration and findings
 
-Start with an adapter around the supported SVG interface. Keep experiments outside the submodule; updating its pinned revision should be a deliberate checkpoint. Record the upstream revision with every reproducibility fixture.
+The application wraps the supported SVG interface while keeping the submodule unchanged. A continuous A4 adapter supplies a union of four overlapping free-space rectangles around one reserved hole. These rectangles belong to a single field and share stems, branch placement and event scheduling; they are not separate rendered gardens. The source's `regions` and `field` functions already support a rectangle union, and `rects.corners = true` makes exposed corners constrain the free-disc radius.
 
-Test fresh worker startup, rapid successive requests, load failure, regeneration memory use and project-subpath loading before reusing this approach. Do not assume its worker can report internal growth steps without additional instrumentation.
+Source inspection found that changing the field alone is insufficient: main stems are clamped to the original left column, the main-stem count depends on density, branch Béziers do not test an interior obstacle, and terminal flowers use fixed size ranges. Checked hooks in [page-lua.ts](../../src/engines/page-lua.ts) expose these decisions in the loaded runtime copy. Our [page-domain.ts](../../src/engines/page-domain.ts) supplies three routes from the original lower-left root samples, an obstacle-aware branch fallback and conservative terminal scaling. Native curves that fit remain unchanged; fallback routing calls the original branch function once to retain its random draw. The footer spans the page. A final exact exclusion clip protects the reserved rectangle; proxy geometry does not prove full motif containment.
+
+The grower already tags stem and motif events. The adapter captures their final geometry once and maps the recorded event times to compact browser playback. This depicts the generator's event sequence; it does not expose the greedy solver's accepted and rejected candidates. Updating the pinned revision must remain a deliberate checkpoint because runtime hooks check specific source anchors.
+
+Geometry tests execute the domain adapter in Wasmoon for central, maximal and offset exclusions. They check source-root retention, upward terminal direction, route containment, one native branch invocation and restoration of replaced functions. These checks complement, rather than replace, actual-generator integration tests and visual inspection. Test fresh worker startup, cancellation, load failure, repeated generation and built project-subpath loading before publication.
 
 Upstream declares MIT with an LPPL-1.3c exception for `florilegium-pgfmath.lua`; fonts have separate notices. Preserve [LICENSE](../../florilegium/LICENSE), the exception's source header and [font notices](../../florilegium/web/fonts/README.md) when distributing relevant files. Use [CITATION.cff](../../florilegium/CITATION.cff) for attribution.

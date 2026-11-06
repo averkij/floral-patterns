@@ -190,6 +190,7 @@ export function ColorControls({
 }
 export function Actions({
   busy,
+  growDisabled = false,
   hasOutput,
   onGrow,
   onExport,
@@ -197,6 +198,7 @@ export function Actions({
   shareLabel,
 }: {
   busy: boolean;
+  growDisabled?: boolean;
   hasOutput: boolean;
   onGrow: () => void;
   onExport: () => void;
@@ -205,8 +207,9 @@ export function Actions({
 }) {
   return (
     <div className="actions">
-      <button className="primary-button" onClick={onGrow}>
-        Grow a new variation <Icon name="arrow" />
+      <button className="primary-button" onClick={onGrow} disabled={busy || growDisabled} aria-busy={busy}>
+        {busy ? 'Growing…' : 'Grow pattern'}
+        {busy ? <span className="button-spinner" aria-hidden="true" /> : <Icon name="arrow" />}
       </button>
       <div className="action-pair">
         <button disabled={!hasOutput || busy} onClick={onExport}>

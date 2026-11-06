@@ -1,4 +1,4 @@
-export const PAGE_ADAPTER = 'florilegium-frame-v1' as const;
+export const PAGE_ADAPTER = 'florilegium-continuous-v2' as const;
 export const FLORILEGIUM_REVISION = '9fbaf56d53e6525e02da05cd802ea7da82052099' as const;
 
 export type PageVisitor =
@@ -38,7 +38,26 @@ export interface VisitorSummary {
   group: string;
   text: string;
   at: string;
-  panel: string;
+}
+
+export interface PageGrowthEvent {
+  id: string;
+  kind: 'stem' | 'bloom';
+  /** Upstream schedule, in seconds. */
+  start: number;
+  duration: number;
+  /** PDF points, in the SVG's single local y-up coordinate system. */
+  x: number;
+  y: number;
+  path?: string;
+  width?: number;
+  length?: number;
+}
+
+export interface PageTimeline {
+  svg: string;
+  duration: number;
+  events: PageGrowthEvent[];
 }
 
 export interface PageResult {
@@ -47,12 +66,13 @@ export interface PageResult {
   stats: { motifs: number; stems: number; visitors: VisitorSummary[] };
   revision: typeof FLORILEGIUM_REVISION;
   adapter: typeof PAGE_ADAPTER;
+  timeline?: PageTimeline;
 }
 
 export interface PageProgress {
   stage: 'loading' | 'growing';
   completed: number;
-  total: 4;
+  total: number;
   label: string;
 }
 
@@ -60,6 +80,7 @@ export interface PageRequest {
   id: number;
   settings: PageSettings;
   runtime: { wasm: string; lua: string };
+  animate?: boolean;
 }
 
 export type PageResponse =

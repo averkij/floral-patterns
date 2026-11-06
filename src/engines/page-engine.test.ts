@@ -86,3 +86,25 @@ test('a stalled worker is terminated and the next request can start cleanly', as
   expect(await recovered).toBe(result);
   engine.dispose();
 });
+
+test('compact timeline requests are cancellable and static requests omit animation', async () => {
+  const engine = createPageEngine();
+  const onProgress = vi.fn();
+  const generation = engine.generate(settings, onProgress, true).catch((error: Error) => error);
+  const worker = WorkerDouble.instances[0];
+  expect(worker.requests[0].animate).toBe(true);
+  const progress = { stage: 'growing' as const, completed: 0, total: 1, label: 'Composing one continuous garden' };
+  worker.respond({ id: 1, progress });
+  expect(onProgress).toHaveBeenCalledExactlyOnceWith(progress);
+  engine.cancel();
+  expect((await generation as Error).name).toBe('AbortError');
+  worker.respond({ id: 1, result: { ...result, timeline: { svg: '<svg/>', duration: 12, events: [] } } });
+  worker.respond({ id: 1, progress });
+  expect(onProgress).toHaveBeenCalledTimes(1);
+  const staticGeneration = engine.generate(settings);
+  const staticWorker = WorkerDouble.instances[1];
+  expect(staticWorker.requests[0].animate).toBe(false);
+  staticWorker.respond({ id: 2, result });
+  expect(await staticGeneration).toBe(result);
+  engine.dispose();
+});

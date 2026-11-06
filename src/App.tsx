@@ -4,6 +4,7 @@ import PageInspector from './components/PageInspector';
 import ShapeInspector from './components/ShapeInspector';
 import { PageSpecimen, ShapeSpecimen } from './components/Specimen';
 import FieldNotes from './components/FieldNotes';
+import CanvasViewport from './components/CanvasViewport';
 import { loadState, serializeState, type PageConfig, type ShapeConfig } from './state';
 import { useGeneration } from './useGeneration';
 
@@ -12,10 +13,14 @@ export default function App() {
     [notes, setNotes] = useState(false),
     [drawing, setDrawing] = useState(false),
     [dragging, setDragging] = useState(false),
+    [watchGrowth, setWatchGrowth] = useState(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    ),
     [shareLabel, setShareLabel] = useState('Copy link');
-  const { output, busy, status, error, current } = useGeneration(
+  const { output, timeline, finishPlayback, playbackProgress, busy, status, error, current, generate, replay } = useGeneration(
     state,
     dragging || (state.tab === 'shape' && drawing),
+    watchGrowth,
   );
   const page = state.tab === 'page';
   const updatePage = (patch: Partial<PageConfig>) =>
@@ -28,6 +33,7 @@ export default function App() {
     const listener = () => {
       setState(loadState());
       setDrawing(false);
+      setDragging(false);
     };
     window.addEventListener('hashchange', listener);
     return () => window.removeEventListener('hashchange', listener);
@@ -39,9 +45,7 @@ export default function App() {
   }, [shareLabel]);
   const grow = () => {
     setDrawing(false);
-    const seed = ((page ? state.page.seed : state.shape.seed) % 2147483645) + 1;
-    if (page) updatePage({ seed });
-    else updateShape({ seed });
+    generate();
   };
   const share = async () => {
     const hash = serializeState(state),
@@ -80,6 +84,7 @@ export default function App() {
           aria-current={page ? 'page' : undefined}
           onClick={() => {
             setDrawing(false);
+            setDragging(false);
             setState((previous) => ({ ...previous, tab: 'page' }));
           }}
         >
@@ -90,6 +95,7 @@ export default function App() {
           aria-current={!page ? 'page' : undefined}
           onClick={() => {
             setDrawing(false);
+            setDragging(false);
             setState((previous) => ({ ...previous, tab: 'shape' }));
           }}
         >
@@ -109,13 +115,16 @@ export default function App() {
                 : 'Let a shape become a garden.'}
             </p>
           </div>
-          <div className="canvas-area">
+          <CanvasViewport kind={page ? 'page' : 'shape'}>
             {page ? (
               <PageSpecimen
                 settings={state.page}
                 svg={output.svg}
                 update={updatePage}
                 onDragging={setDragging}
+                timeline={timeline}
+                onPlaybackComplete={finishPlayback}
+                onPlaybackProgress={playbackProgress}
               />
             ) : (
               <ShapeSpecimen
@@ -129,7 +138,7 @@ export default function App() {
                 }}
               />
             )}
-          </div>
+          </CanvasViewport>
           <div
             className={`generation-status ${error ? 'has-error' : ''}`}
             role="status"
@@ -139,13 +148,13 @@ export default function App() {
             {error ? (
               <>
                 <span>{error}</span>
-                <button onClick={grow}>Try another seed</button>
+                <button onClick={grow}>Try again</button>
               </>
             ) : busy ? (
               status
             ) : drawing ? (
               'Drawing a new region'
-            ) : output.svg ? (
+            ) : output.svg && current ? (
               output.detail
             ) : (
               status
@@ -158,7 +167,14 @@ export default function App() {
         <aside className="inspector" aria-label="Pattern settings">
           <div className="inspector-fields">
             {page ? (
-              <PageInspector settings={state.page} update={updatePage} />
+              <PageInspector
+                settings={state.page}
+                update={updatePage}
+                watchGrowth={watchGrowth}
+                onWatchGrowth={setWatchGrowth}
+                onReplay={replay}
+                replayDisabled={busy || !watchGrowth || dragging || !current}
+              />
             ) : (
               <ShapeInspector
                 settings={state.shape}
@@ -170,6 +186,7 @@ export default function App() {
           </div>
           <Actions
             busy={busy}
+            growDisabled={dragging}
             hasOutput={Boolean(output.svg) && current}
             onGrow={grow}
             onExport={download}

@@ -8,9 +8,10 @@ Research reviewed on 2026-11-06. This is a working notebook for building browser
 | --- | --- | --- |
 | [Wong, Zongker and Salesin (1998)](wong-1998.md) | Adaptive ornament and growth into empty space | Paper text, algorithm, examples, selected rendered figures, complete bibliography |
 | [Walter Crane, Line and Form](crane-line-and-form.md) | Rhythm, balance, motif families and boundary-aware composition | Selected passages in chapters II, IV, V and VI |
-| [Florilegium](florilegium.md) | Existing generator and browser integration | Pinned local source, documentation, worker and Pages workflow; not executed in this review |
+| [Florilegium](florilegium.md) | Existing generator and browser integration | Pinned source review and subsequent Wasmoon adapter/geometry experiments; limitations recorded separately |
 | [Lingdong Huang's MIT project](huang-voronoi.md) | Partition-first floral composition | Full project overview |
 | [ornalt.dh](ornalt-code.md) | Concrete Dither implementation | Source inspection of geometry, routing, assignment and rendering pipeline; not executed |
+| [orntxt.dh](orntxt-code.md) | Typography demo and source-based port | Pinned source, dependency chain, motif fitting and provenance; original Dither not executed |
 | [Reference trail](references.md) | All 36 references from Wong et al. plus selected follow-ups | Individual review levels recorded below |
 
 For implementation planning, see [demo experiments](../development/experiments.md) and [GitHub Pages direction](../development/github-pages.md).

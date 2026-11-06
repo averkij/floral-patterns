@@ -1,6 +1,6 @@
 # Lingdong Huang: non-overlapping floral patterns
 
-[MIT Media Lab project overview](https://www.media.mit.edu/projects/non-overlapping-floral-patterns/overview/), titled *Filling Arbitrary Shapes with Non-Overlapping Procedural Floral Patterns*. Reviewed 2026-11-06. The overview links to the [presets source](https://github.com/LingDong-/dither-sketches/blob/main/ornalt.dh); see the separate [code review](ornalt-code.md).
+[MIT Media Lab project overview](https://www.media.mit.edu/projects/non-overlapping-floral-patterns/overview/), titled *Filling Arbitrary Shapes with Non-Overlapping Procedural Floral Patterns*. Reviewed 2026-11-06. The overview links to the [presets source](https://github.com/LingDong-/dither-sketches/blob/main/ornalt.dh) and [font demo source](https://github.com/LingDong-/dither-sketches/blob/main/orntxt.dh); see the separate [presets review](ornalt-code.md) and [typography source/port review](orntxt-code.md).
 
 ## Source findings
 

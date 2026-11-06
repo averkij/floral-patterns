@@ -7,6 +7,8 @@ import type {
 } from './page-types';
 
 export type {
+  PageGrowthEvent,
+  PageTimeline,
   PageProgress,
   PageRectangle,
   PageResult,
@@ -20,6 +22,7 @@ export interface PageEngine {
   generate(
     settings: PageSettings,
     onProgress?: (progress: PageProgress) => void,
+    animate?: boolean,
   ): Promise<PageResult>;
   cancel(): void;
   dispose(): void;
@@ -44,7 +47,7 @@ export function createPageEngine(): PageEngine {
   }
 
   return {
-    generate(settings, onProgress) {
+    generate(settings, onProgress, animate = false) {
       if (disposed) return Promise.reject(new Error('This page engine has been disposed.'));
       if (pending) stop();
       worker ??= new Worker(new URL('./page-worker.ts', import.meta.url), { type: 'module' });
@@ -89,6 +92,7 @@ export function createPageEngine(): PageEngine {
         const request: PageRequest = {
           id,
           settings,
+          animate,
           runtime: {
             wasm: new URL('vendor/wasmoon/glue.wasm', base).href,
             lua: new URL('vendor/florilegium/', base).href,

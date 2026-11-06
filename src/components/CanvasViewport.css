@@ -1,0 +1,171 @@
+.canvas-viewport {
+  --canvas-scroll-limit: clamp(280px, calc(100dvh - 330px), 900px);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-bottom: 12px;
+}
+
+.canvas-view-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 39px;
+  border-bottom: 1px solid var(--light-rule);
+  padding: 0 0 7px;
+}
+
+.canvas-view-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.canvas-view-hint {
+  font-size: 10px;
+  color: #747c69;
+}
+
+.canvas-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: auto;
+}
+
+.canvas-zoom-controls button,
+.canvas-zoom-controls select {
+  height: 30px;
+  min-height: 30px;
+  border-color: #b7bdad;
+  background: var(--paper);
+  font-size: 11px;
+}
+
+.canvas-zoom-controls button {
+  width: 32px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.canvas-zoom-controls select {
+  width: 76px;
+  margin: 0 -1px;
+  padding: 3px 4px 3px 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.canvas-zoom-controls .canvas-fit-button {
+  width: 42px;
+  margin-left: 9px;
+  font-size: 11px;
+}
+
+.canvas-fit-button[aria-pressed='true'] {
+  color: var(--olive);
+  background: #e9ece1;
+}
+
+.canvas-scrollport {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  max-height: var(--canvas-scroll-limit);
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+  scrollbar-width: thin;
+  scrollbar-color: #a5ad98 transparent;
+}
+
+.canvas-scrollport:focus-visible {
+  outline-offset: -2px;
+}
+
+.canvas-scroll-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 100%;
+  padding: 19px 42px 14px;
+}
+
+.canvas-viewport-shape .canvas-scroll-content {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.canvas-stage-host {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.canvas-viewport.is-zoomed .canvas-scroll-content {
+  width: max-content;
+}
+
+.canvas-viewport.is-zoomed .canvas-stage-host {
+  width: var(--canvas-preview-width);
+  flex: 0 0 var(--canvas-preview-width);
+}
+
+.canvas-viewport.is-zoomed .page-stage,
+.canvas-viewport.is-zoomed .shape-stage {
+  width: 100%;
+  min-width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.canvas-viewport.is-zoomed .a4-paper {
+  max-height: none;
+}
+
+@media (min-width: 681px) {
+  .canvas-viewport-page.is-fit .page-stage {
+    /* Reserve the scroll padding, page label and caption before fitting A4. */
+    max-width: min(100%, calc((var(--canvas-scroll-limit) - 110px) * 0.70707));
+  }
+}
+
+@media (max-width: 680px) {
+  .canvas-viewport {
+    --canvas-scroll-limit: 70dvh;
+  }
+
+  .canvas-view-hint {
+    display: none;
+  }
+
+  .canvas-zoom-controls button,
+  .canvas-zoom-controls select {
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .canvas-zoom-controls button {
+    width: 36px;
+  }
+
+  .canvas-scroll-content {
+    padding: 16px 24px 14px;
+  }
+
+  .canvas-viewport-shape .canvas-scroll-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .canvas-viewport.is-zoomed.canvas-viewport-shape .canvas-scroll-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

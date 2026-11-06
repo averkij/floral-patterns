@@ -1,29 +1,24 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useRef, useState, type PointerEvent } from 'react';
 import { clamp, constrainRect, type PageConfig, type Rect, type ShapeConfig } from '../state';
-
-export function useSvgUrl(svg: string) {
-  const [url, setUrl] = useState('');
-  useEffect(() => {
-    if (!svg) {
-      setUrl('');
-      return;
-    }
-    const next = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-    setUrl(next);
-    return () => URL.revokeObjectURL(next);
-  }, [svg]);
-  return url;
-}
+import type { PageTimeline } from '../engines/page-engine';
+import { useSvgUrl } from '../useSvgUrl';
+import PageGrowthPreview from './PageGrowthPreview';
 export function PageSpecimen({
   settings,
   svg,
   update,
   onDragging,
+  timeline,
+  onPlaybackComplete,
+  onPlaybackProgress,
 }: {
   settings: PageConfig;
   svg: string;
   update: (p: Partial<PageConfig>) => void;
   onDragging: (b: boolean) => void;
+  timeline: PageTimeline | null;
+  onPlaybackComplete: () => void;
+  onPlaybackProgress: (percent: number) => void;
 }) {
   const url = useSvgUrl(svg),
     surface = useRef<SVGSVGElement>(null);
@@ -81,7 +76,7 @@ export function PageSpecimen({
               alt="Generated A4 floral garden surrounding a reserved rectangle"
               draggable={false}
             />
-          ) : (
+          ) : !timeline ? (
             <div className="empty-specimen">
               <span>
                 Every garden begins
@@ -89,6 +84,9 @@ export function PageSpecimen({
                 with a little space.
               </span>
             </div>
+          ) : null}
+          {timeline && (
+            <PageGrowthPreview timeline={timeline} onComplete={onPlaybackComplete} onProgress={onPlaybackProgress} />
           )}
           {settings.showFrame && (
             <svg
@@ -98,6 +96,7 @@ export function PageSpecimen({
               onPointerMove={move}
               onPointerUp={end}
               onPointerCancel={end}
+              onLostPointerCapture={end}
             >
               <rect
                 className="reserved-rect"

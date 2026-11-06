@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { generateShapePattern, type ShapePatternOptions } from './shape';
 import { maskContains, type Point, type ShapeMask } from './shape-mask';
+import { buildOrntxtScene, samplePath, cubicPoint, makePetal, naturalCubicBezier, pointInPolygon } from './shape-orntxt';
 
 const palette = { ink: '#39473b', accent: '#d59278', paper: '#fffdf8' };
 
@@ -51,7 +52,7 @@ const options = (mask = solid): ShapePatternOptions => ({
 });
 const geometry = (svg: string) => [...svg.matchAll(/\sd="([^"]+)"/g)].map((match) => match[1]);
 
-describe('independent shape generator', () => {
+describe('orntxt source-derived generator', () => {
   it('reproduces vector geometry and changes layout with the seed', () => {
     const first = generateShapePattern(options());
     const second = generateShapePattern(options());
@@ -74,14 +75,16 @@ describe('independent shape generator', () => {
   });
 
   it('changes flower detail without moving the cell scaffold', () => {
-    const small = generateShapePattern({ ...options(), flowerScale: 0.65 });
-    const large = generateShapePattern({ ...options(), flowerScale: 1.5 });
-    const definitions = (svg: string) => svg.match(/<defs>(.*?)<\/defs>/)?.[1];
-    expect(definitions(small.svg)).toBe(definitions(large.svg));
-    expect(small.stats.cells).toBe(large.stats.cells);
-    expect(small.stats.flowers).toBe(large.stats.flowers);
-    expect(geometry(small.svg)).not.toEqual(geometry(large.svg));
-    expect(large.svg).not.toMatch(/NaN|Infinity/);
+    const small = buildOrntxtScene({ mask: solid, seed: 42, density: 100, flowerScale: 0.65 });
+    const large = buildOrntxtScene({ mask: solid, seed: 42, density: 100, flowerScale: 1.5 });
+    expect(small.cells).toEqual(large.cells);
+    expect(small.sites).toEqual(large.sites);
+    expect(small.motifs.filter(motif => motif.kind === 'leaf')).toEqual(large.motifs.filter(motif => motif.kind === 'leaf'));
+    expect(small.motifs.filter(motif => motif.kind === 'flower')).not.toEqual(large.motifs.filter(motif => motif.kind === 'flower'));
+    for (const motif of small.motifs.filter(motif => motif.kind === 'flower')) {
+      const enlarged = large.motifs.find(candidate => candidate.kind === 'flower' && candidate.cell === motif.cell);
+      expect(enlarged?.fitScale).toBeGreaterThanOrEqual(motif.fitScale);
+    }
   });
 
   it('normalizes non-finite numeric controls at the engine boundary', () => {
@@ -90,7 +93,7 @@ describe('independent shape generator', () => {
     expect(invalid.svg).toBe(fallback.svg);
   });
 
-  it('retains a counter as an even-odd vector silhouette', () => {
+  it('fits complete motif curves around a counter without SVG clipping', () => {
     const hole: Point[] = [
       [130, 130],
       [270, 130],
@@ -104,10 +107,16 @@ describe('independent shape generator', () => {
     );
     const result = generateShapePattern(options(ring));
     expect(maskContains(ring, 200, 200)).toBe(false);
-    expect(result.svg).toContain('clip-rule="evenodd"');
-    expect(result.svg).toContain(ring.path);
-    expect(result.svg).not.toMatch(/NaN|Infinity/);
+    expect(/clipPath|clip-path|<mask/.test(result.svg)).toBe(false);
+    expect(/NaN|Infinity/.test(result.svg)).toBe(false);
     expect(result.stats.cells).toBe(100);
+    const scene = buildOrntxtScene({ mask: ring, seed: 42, density: 100, flowerScale: 1.5 });
+    expect(scene.motifs.length).toBeGreaterThan(50);
+    const outside = scene.motifs.flatMap(motif => motif.paths.flatMap(path => samplePath(path, 64))).filter(point => !maskContains(ring, ...point));
+    expect(outside.length).toBe(0);
+    const outsideVines = scene.vines.flatMap(route => route.flatMap(curve => Array.from({ length: 64 }, (_, i) => cubicPoint(curve, i / 63)))).filter(point => !maskContains(ring, ...point));
+    expect(outsideVines.length).toBe(0);
+    expect(scene.motifs.every(motif => motif.paths.every(path => !path.closed || !pointInPolygon([200, 200], samplePath(path, 48))))).toBe(true);
   });
 
   it('terminates on disconnected regions and bounds excessive sample requests', () => {
@@ -131,16 +140,35 @@ describe('independent shape generator', () => {
     expect(result.stats.cells).toBeLessThanOrEqual(260);
     expect(result.svg).toContain('stroke-dasharray="3 3"');
     expect(result.svg).not.toMatch(/NaN|Infinity/);
-    const cellPaths = [
-      ...result.svg.matchAll(/<clipPath id="shape-cell-\d+"><path d="([^"]+)"/g),
-    ].map((match) => match[1]);
-    const averageX = (path: string) => {
-      const coordinates = path.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
-      const xs = coordinates.filter((_, index) => index % 2 === 0);
-      return xs.reduce((sum, x) => sum + x, 0) / xs.length;
-    };
-    expect(cellPaths.some((path) => averageX(path) < 150)).toBe(true);
-    expect(cellPaths.some((path) => averageX(path) > 250)).toBe(true);
+    const scene = buildOrntxtScene({ mask: islands, seed: 42, density: 100, flowerScale: 1 });
+    expect(scene.sites.some(point => point[0] < 150)).toBe(true);
+    expect(scene.sites.some(point => point[0] > 250)).toBe(true);
+    expect(scene.motifs.flatMap(motif => motif.paths.flatMap(path => samplePath(path, 48))).every(point => maskContains(islands, ...point))).toBe(true);
+    expect(scene.vines.flatMap(route => route.flatMap(curve => Array.from({ length: 48 }, (_, i) => cubicPoint(curve, i / 47)))).every(point => maskContains(islands, ...point))).toBe(true);
+  });
+
+  it('keeps whole motifs inside a deeply concave region at scale and density extremes', () => {
+    const contour: Point[] = [[20, 20], [380, 20], [380, 120], [100, 120], [100, 280], [380, 280], [380, 380], [20, 380]];
+    const concave = maskFromContours([contour], (x, y) => x > 20 && x < 380 && y > 20 && y < 380 && !(x > 100 && y > 120 && y < 280));
+    for (const density of [60, 260]) {
+      const scene = buildOrntxtScene({ mask: concave, seed: 197, density, flowerScale: 1.5 });
+      expect(scene.motifs.length).toBeGreaterThan(density * 0.6);
+      const points = scene.motifs.flatMap(motif => motif.paths.flatMap(path => samplePath(path, 64)));
+      expect(points.every(point => maskContains(concave, ...point))).toBe(true);
+    }
+  });
+
+  it('retains the upstream three-cubic petal construction and natural-cubic continuity', () => {
+    const petal = makePetal([0, 0], [10, 0], [0, 2]);
+    expect(petal.curves).toHaveLength(3);
+    expect(petal.curves[0][1]).toEqual([3, 2.4]);
+    expect(petal.curves[0][3]).toEqual([9, 0.6]);
+    expect(petal.curves[2][3]).toEqual([0, 0]);
+    const curves = naturalCubicBezier([[0, 0], [30, 50], [80, 20], [110, 70]]);
+    for (let i = 0; i < curves.length - 1; i++) {
+      expect(curves[i][3]).toEqual(curves[i + 1][0]);
+      for (const axis of [0, 1]) expect(curves[i][3][axis] - curves[i][2][axis]).toBeCloseTo(curves[i + 1][1][axis] - curves[i + 1][0][axis], 8);
+    }
   });
 
   it('rejects empty or unusably thin masks with a useful error', () => {

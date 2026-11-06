@@ -1,183 +1,116 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, expect, test } from 'vitest';
-import { LuaFactory } from 'wasmoon';
-import type { LuaEngine } from 'wasmoon';
-import {
-  composePage,
-  LUA_MODULES,
-  pagePanels,
-  panelLua,
-  validatePageSettings,
-} from './page-adapter';
-import type { PanelResult } from './page-adapter';
+import { LuaFactory, type LuaEngine } from 'wasmoon';
+import { composeContinuousPage, continuousPageLua, LUA_MODULES, validatePageSettings } from './page-adapter';
+import type { ContinuousResult } from './page-adapter';
+import { adaptGrowSource } from './page-lua';
+import { continuousDomainLua } from './page-domain';
 import type { PageSettings } from './page-types';
 
 const settings: PageSettings = {
-  version: 1,
-  seed: 7,
-  rect: { x: 58, y: 58, width: 100, height: 181 },
-  ink: '#264b39',
-  accent: '#b05d47',
-  paper: '#fffdf8',
-  density: 0.55,
-  season: 'summer',
-  visitors: [],
+  version: 1, seed: 7, rect: { x: 56, y: 52, width: 108, height: 189 },
+  ink: '#264b39', accent: '#b05d47', paper: '#fffdf8', density: 0.55,
+  season: 'summer', visitors: [],
 };
 let lua: LuaEngine;
 
 beforeAll(async () => {
   const factory = new LuaFactory(resolve('node_modules/wasmoon/dist/glue.wasm'));
-  await Promise.all(
-    LUA_MODULES.map(async (name) => {
-      await factory.mountFile(
-        `/florilegium/${name}.lua`,
-        await readFile(resolve('florilegium', `${name}.lua`), 'utf8'),
-      );
-    }),
-  );
+  for (const name of LUA_MODULES) {
+    const source = await readFile(resolve('florilegium', `${name}.lua`), 'utf8');
+    await factory.mountFile(`/florilegium/${name}.lua`, name === 'florilegium-grow' ? adaptGrowSource(source) : source);
+  }
   lua = await factory.createEngine();
   await lua.doString('package.path = "/florilegium/?.lua;" .. package.path');
   lua.global.setTop(0);
 }, 30_000);
-
 afterAll(() => lua?.global.close());
 
-test('the actual upstream Lua produces a reproducible four-margin A4 composition', async () => {
-  validatePageSettings(settings);
-  const panels = pagePanels(settings);
-  const results: PanelResult[] = [];
-  for (const panel of panels) {
-    results.push((await lua.doString(panelLua(settings, panel))) as PanelResult);
-    lua.global.setTop(0);
+async function generate(input: PageSettings): Promise<ContinuousResult> {
+  const raw = await lua.doString(continuousPageLua(input)) as ContinuousResult;
+  lua.global.setTop(0);
+  await lua.doString('collectgarbage("collect")');
+  lua.global.setTop(0);
+  return raw;
+}
+
+test('one native garden produces a compact, scheduled A4 scene and an identical static final', async () => {
+  const raw = await generate(settings);
+  const animated = composeContinuousPage(settings, raw, 0, true);
+  const still = composeContinuousPage(settings, raw, 0, false);
+  expect(animated.svg).toBe(still.svg);
+  expect(animated.timeline?.svg).toBe(still.svg);
+  expect(still.timeline).toBeUndefined();
+  expect(still.svg).toContain('width="210mm" height="297mm"');
+  expect(still.svg).toContain('fill="#fffdf8"');
+  expect(still.svg.match(/<svg\b/g)).toHaveLength(1);
+  expect(still.svg).not.toMatch(/data-panel|rotate\(90|NaN|Infinity|undefined/);
+  expect(still.stats.motifs).toBeGreaterThan(0);
+  expect(still.stats.visitors).toEqual([]);
+  const events = animated.timeline!.events;
+  expect(events.length).toBeGreaterThan(30);
+  expect(raw.duration).toBeGreaterThan(1);
+  for (const event of events) {
+    expect([event.start, event.duration, event.x, event.y].every(Number.isFinite)).toBe(true);
+    expect(event.start).toBeGreaterThanOrEqual(0);
+    expect(event.duration).toBeGreaterThan(0);
+    expect(event.start + event.duration).toBeLessThanOrEqual(raw.duration + 1e-8);
   }
-  const duplicate = (await lua.doString(panelLua(settings, panels[0]))) as PanelResult;
-  lua.global.setTop(0);
-  expect(duplicate.svg).toBe(results[0].svg);
-  const page = composePage(settings, panels, results, 0);
-  expect(page.svg).toContain('width="210mm" height="297mm" viewBox="0 0 210 297"');
-  expect(page.svg.match(/data-panel=/g)).toHaveLength(4);
-  expect(page.svg).toContain('fill="#fffdf8"');
-  expect(page.svg).not.toMatch(/NaN|Infinity|undefined/);
-  expect(page.stats.motifs).toBeGreaterThan(0);
-  expect(page.stats.visitors).toEqual([]);
-  expect(page.revision).toBe('9fbaf56d53e6525e02da05cd802ea7da82052099');
-}, 90_000);
+  const roots = events.filter(event => event.kind === 'stem' && event.path).slice(0, 3);
+  expect(roots).toHaveLength(3);
+  expect(roots.every(event => event.path!.startsWith('M'))).toBe(true);
+  expect(roots[1].path!.match(/L/g)!.length).toBeGreaterThan(100);
+  const ids = new Set(events.map(event => event.id));
+  for (const group of still.svg.matchAll(/data-growth-event="([^"]+)"/g)) expect(ids.has(group[1])).toBe(true);
+  const duplicate = await generate(settings);
+  expect(duplicate.body).toBe(raw.body);
+  expect(duplicate.events).toEqual(raw.events);
+  expect(duplicate.stats).toEqual(raw.stats);
 
-test('invalid rectangles and unsafe settings are rejected before Lua execution', () => {
-  expect(() => validatePageSettings({ ...settings, rect: { ...settings.rect, x: 0 } })).toThrow(
-    /18 mm/,
-  );
-  expect(() => validatePageSettings({ ...settings, ink: 'red\";error(1)' })).toThrow(/hexadecimal/);
+  // A separate ordinary upstream draw proves compact recording does not alter
+  // final plant geometry. Only the widened upstream boundary clip is excluded.
+  const native = await lua.doString(`
+    local grow, flora = require("florilegium-grow"), require("florilegium-flora")
+    local drawer = require("florilegium-native")
+    local original_page, original_draw = grow.page, drawer.draw
+    ${continuousDomainLua(settings)}
+    grow.page = function(g) configure(g) g.anim = false return original_page(g) end
+    drawer.draw = function(kind, ...) if kind == "visitor" then return true end return original_draw(kind, ...) end
+    local ok, svg = pcall(function()
+      return require("florilegium-svg").page({ paper = "a4", left = "56mm", right = "46mm", top = "52mm", bottom = "56mm",
+        footskip = "0mm", headsep = "0mm", headheight = "0mm", head = false, seed = 7,
+        ink = "264b39", accent = "b05d47", density = 0.55, season = "summer", visitors = true })
+    end)
+    grow.page, drawer.draw = original_page, original_draw
+    restore_domain()
+    if not ok then error(svg) end
+    return svg
+  `) as string;
+  lua.global.setTop(0);
+  const paintedPaths = (svg: string) => svg.replace(/<clipPath\b[^>]*>[\s\S]*?<\/clipPath>/g, '').match(/<path\b[^>]*\/>/g);
+  expect(paintedPaths(raw.body)).toEqual(paintedPaths(native));
+}, 60_000);
+
+test('maximum reservation stays valid and selective visitors preserve plant layout', async () => {
+  const input: PageSettings = { ...settings, density: 0.2,
+    rect: { x: 18, y: 18, width: 174, height: 261 }, visitors: ['bee', 'butterfly', 'bird', 'snail'] };
+  validatePageSettings(input);
+  const all = await generate(input);
+  const bees = await generate({ ...input, visitors: ['bee'] });
+  expect(all.stats.motifs).toBeGreaterThan(0);
+  expect(Object.values(bees.stats.visitors ?? {}).every(visitor => visitor.group === 'bee')).toBe(true);
+  expect(bees.stats.motifs).toBe(all.stats.motifs);
+  expect(bees.stats.stems).toBe(all.stats.stems);
+  const svg = composeContinuousPage(input, all, 0).svg;
+  expect(svg).not.toMatch(/NaN|Infinity|undefined/);
+  expect(svg.match(/id="garden-reservation"/g)).toHaveLength(1);
+  expect(svg).toContain('clip-rule="evenodd"');
+}, 60_000);
+
+test('invalid settings and a changed upstream source fail explicitly', () => {
+  expect(() => validatePageSettings({ ...settings, rect: { ...settings.rect, x: 0 } })).toThrow(/18 mm/);
+  expect(() => validatePageSettings({ ...settings, ink: 'red";error(1)' })).toThrow(/hexadecimal/);
   expect(() => validatePageSettings({ ...settings, seed: Number.NaN })).toThrow(/seed/);
+  expect(() => adaptGrowSource('-- wrong revision')).toThrow(/pinned Florilegium source/);
 });
-
-test('the smallest supported panel terminates, and visitor selection remains selective', async () => {
-  const narrow: PageSettings = {
-    ...settings,
-    rect: { x: 18, y: 18, width: 40, height: 40 },
-    visitors: ['bee'],
-  };
-  validatePageSettings(narrow);
-  const panel = pagePanels(narrow)[2];
-  const result = (await lua.doString(panelLua(narrow, panel))) as PanelResult;
-  lua.global.setTop(0);
-  expect(result.svg).toContain('<path ');
-  expect(result.svg).not.toMatch(/NaN|Infinity/);
-  expect(
-    Object.values(result.stats?.visitors ?? {}).every((visitor) => visitor.group === 'bee'),
-  ).toBe(true);
-}, 30_000);
-
-const frameCases = [
-  { name: 'default', rect: { x: 56, y: 52, width: 108, height: 189 } },
-  { name: 'maximum reserved area', rect: { x: 18, y: 18, width: 174, height: 261 } },
-];
-
-test.each(frameCases)(
-  '$name: clipping panels exactly partition the space outside the rectangle',
-  async ({ rect }) => {
-    const input = { ...settings, rect };
-    validatePageSettings(input);
-    const panels = pagePanels(input);
-    const bounds = panels.map((panel) => {
-      const translation = /translate\(([^ ]+) ([^)]+)\)/.exec(panel.transform);
-      const rotation = /rotate\(([^)]+)\)/.exec(panel.transform);
-      const angle = (Number(rotation?.[1] ?? 0) * Math.PI) / 180;
-      const tx = Number(translation?.[1] ?? 0),
-        ty = Number(translation?.[2] ?? 0);
-      const corners = [
-        [0, 0],
-        [panel.width, 0],
-        [0, panel.length],
-        [panel.width, panel.length],
-      ].map(([x, y]) => [
-        tx + x * Math.cos(angle) - y * Math.sin(angle),
-        ty + x * Math.sin(angle) + y * Math.cos(angle),
-      ]);
-      return {
-        left: Math.min(...corners.map(([x]) => x)),
-        top: Math.min(...corners.map(([, y]) => y)),
-        right: Math.max(...corners.map(([x]) => x)),
-        bottom: Math.max(...corners.map(([, y]) => y)),
-      };
-    });
-    const overlap = (a: (typeof bounds)[number], b: (typeof bounds)[number]) =>
-      Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
-      Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-    const reserved = {
-      left: rect.x,
-      top: rect.y,
-      right: rect.x + rect.width,
-      bottom: rect.y + rect.height,
-    };
-    let area = 0;
-    bounds.forEach((bound, i) => {
-      expect(bound.left).toBeGreaterThanOrEqual(-1e-8);
-      expect(bound.top).toBeGreaterThanOrEqual(-1e-8);
-      expect(bound.right).toBeLessThanOrEqual(210 + 1e-8);
-      expect(bound.bottom).toBeLessThanOrEqual(297 + 1e-8);
-      expect(overlap(bound, reserved)).toBeCloseTo(0);
-      for (let j = 0; j < i; j++) expect(overlap(bound, bounds[j])).toBeCloseTo(0);
-      area += (bound.right - bound.left) * (bound.bottom - bound.top);
-    });
-    expect(area).toBeCloseTo(210 * 297 - rect.width * rect.height);
-
-    const outputs: PanelResult[] = [];
-    for (const panel of panels) {
-      outputs.push((await lua.doString(panelLua(input, panel))) as PanelResult);
-      lua.global.setTop(0);
-    }
-    const result = composePage(input, panels, outputs, 0);
-    expect(result.svg.match(/overflow="hidden"/g)).toHaveLength(4);
-    expect(result.svg).not.toMatch(/NaN|Infinity|undefined/);
-    expect(result.stats.motifs).toBeGreaterThan(0);
-  },
-  90_000,
-);
-
-test('filtering to bees removes a known caterpillar without changing the plant layout', async () => {
-  const input: PageSettings = {
-    ...settings,
-    rect: frameCases[0].rect,
-    visitors: ['bee', 'caterpillar'],
-  };
-  const panel = pagePanels(input)[0];
-  const all = (await lua.doString(panelLua(input, panel))) as PanelResult;
-  lua.global.setTop(0);
-  const bees = (await lua.doString(
-    panelLua({ ...input, visitors: ['bee'] }, panel),
-  )) as PanelResult;
-  lua.global.setTop(0);
-  expect(
-    Object.values(all.stats?.visitors ?? {})
-      .map((visitor) => visitor.group)
-      .sort(),
-  ).toEqual(['bee', 'larva']);
-  expect(Object.values(bees.stats?.visitors ?? {}).map((visitor) => visitor.group)).toEqual([
-    'bee',
-  ]);
-  expect(bees.stats?.motifs).toBe(all.stats?.motifs);
-  expect(bees.stats?.stems).toBe(all.stats?.stems);
-  expect(bees.svg.length).toBeLessThan(all.svg.length);
-}, 30_000);

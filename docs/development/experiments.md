@@ -7,8 +7,8 @@ Status updated 2026-11-06: the first three investigations now have initial inter
 | Order | Investigation | Current implementation | Next research |
 | --- | --- | --- | --- |
 | 1 | Floral specimen desk | **Initial demo:** actual Florilegium Lua in a worker; seed, palette, season, visitors, A4 frame, SVG export and shared settings. | Compare composition quality across fixed seeds and rectangle proportions. |
-| 2 | Watch a panel grow | **Initial growth baseline:** Page garden fills four margins around an editable rectangle using the upstream growth method. See [adapter evidence](florilegium-frame.md). | Step/pause, free-disc overlays and accepted/rejected proposal inspection are not implemented. Study hierarchy and connections between panels. |
-| 3 | Flowers inside a letter | **Initial demo:** independent Huang-inspired sampling, cells and vine routing; preset/freehand masks, large lettering, density, flower scale and cell overlay. No Dither source is reused. | Quantify containment and overlap beyond final clipping; inspect routing and difficult silhouettes. |
+| 2 | Watch a page grow | **Initial growth baseline:** one continuous A4 field around an editable exclusion, using Florilegium's native orientation and one compact event timeline. Watch growth and replay use the applied seed. See [adapter evidence](florilegium-frame.md). | Step/pause, free-disc overlays and accepted/rejected proposal inspection remain research. Study branch continuity, coverage and boundary fit around narrow corners. |
+| 3 | Flowers inside a letter | **Source-based port:** Lingdong Huang's `orntxt.dh` topology, routing and motifs adapted to TypeScript; preset/freehand masks, large lettering, density, flower scale and cell overlay. [Provenance and differences](../knowledge/orntxt-code.md). | Compare complete-motif fitting with source output; quantify containment and overlap; inspect routing and difficult silhouettes. |
 | 4 | One vine, several voices | **Proposed.** Color changes preserve the seeded geometry in the current demos. | Compare outline, flat color, tapered ink and wash renderers on a frozen scene. |
 | 5 | Living borders and wallpaper | **Proposed.** | Add repeat units, symmetry and spacing controls; inspect seams in a 3-by-3 neighborhood. |
 
@@ -17,6 +17,8 @@ A later hybrid could reserve a few large flowers, route a coherent vine skeleton
 ## Common experiment contract
 
 Each demo should save an algorithm/version identifier, seed, dimensions, parameters and any relevant upstream revision. A shared link must reconstruct those inputs. Keep named presets as data, so they can become comparison fixtures.
+
+The current interface separates editing from generation: initial load, seed/settings changes, rectangle manipulation and freehand drawing prepare a draft. **Grow pattern** explicitly applies it, with a busy spinner during computation/playback. The canvas offers Fit and 25–200% preview zoom; scrolling and zoom do not change export dimensions. Include this draft/apply behavior in interaction checks so dragging cannot silently regenerate a specimen.
 
 For new engines, separate region representation, layout, motif construction and rendering. An inspectable scene should identify elements, their parents/attachments, geometry and bounds. Give layout and visual detail separate random streams. Recoloring should not silently regenerate the composition.
 

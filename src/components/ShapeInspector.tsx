@@ -74,7 +74,7 @@ export default function ShapeInspector({
               {drawing ? 'Drawing mode is on' : 'Draw a new outline'}
             </button>
             <p className="help-text">
-              Drag on the canvas to draw a closed region. Release to grow.
+              Drag on the canvas to draw a closed region. Then press Grow pattern.
             </p>
           </>
         )}

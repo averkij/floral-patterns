@@ -10,9 +10,17 @@ const visitors: [Visitor, string][] = [
 export default function PageInspector({
   settings,
   update,
+  watchGrowth,
+  onWatchGrowth,
+  onReplay,
+  replayDisabled,
 }: {
   settings: PageConfig;
   update: (p: Partial<PageConfig>) => void;
+  watchGrowth: boolean;
+  onWatchGrowth: (enabled: boolean) => void;
+  onReplay: () => void;
+  replayDisabled: boolean;
 }) {
   const rectangle = (key: 'x' | 'y' | 'width' | 'height', value: number) =>
     update({ rect: constrainRect({ ...settings.rect, [key]: value }) });
@@ -28,6 +36,12 @@ export default function PageInspector({
           step={0.05}
           onChange={(density) => update({ density })}
         />
+        <div className="growth-controls">
+          <Check label="Watch growth" checked={watchGrowth} onChange={onWatchGrowth} />
+          <button onClick={onReplay} disabled={replayDisabled} aria-label="Replay growth">
+            Replay
+          </button>
+        </div>
       </Section>
       <ColorControls palette={settings} onChange={update} />
       <Section title="Garden">

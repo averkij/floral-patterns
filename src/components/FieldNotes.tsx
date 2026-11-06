@@ -34,35 +34,40 @@ export default function FieldNotes({ onClose }: { onClose: () => void }) {
           <a href="https://github.com/kevinraymond/florilegium" target="_blank" rel="noreferrer">
             Florilegium
           </a>{' '}
-          Lua engine grows plants into free space. Our framing adapter composes four margins around
+          Lua engine grows plants into free space. Our framing adapter grows one garden around
           your rectangle on an A4 page. Visitors are permitted individually; their arrival depends
           on the seed. Disabling one can leave the space it would have occupied.
         </p>
+        <p>
+          Watch growth follows Florilegium’s timed stems, opening flowers and arriving visitors.
+          Replay grows the same seed again; turn Watch growth off for a quicker finished proof.
+        </p>
         <h3>02 / Shape & letter</h3>
         <p>
-          An independent implementation inspired by{' '}
+          A TypeScript port of{' '}
           <a
-            href="https://www.media.mit.edu/projects/non-overlapping-floral-patterns/overview/"
+            href="https://github.com/LingDong-/dither-sketches/blob/8e7a1cbf91fa9736179eba0953e79dc49867f74a/orntxt.dh"
             target="_blank"
             rel="noreferrer"
           >
-            Lingdong Huang’s method
+            Lingdong Huang’s orntxt program
           </a>
-          : distribute points, divide space into cells, route vines along their edges, then fit
-          flowers and leaves. The letter is converted to contours, so its font is preserved in your
-          SVG.
+          : place weighted points, relax the cells, route winding vines, then construct curved
+          leaves, buds and fan-shaped flowers. The letter becomes contours, so the exported SVG does
+          not depend on its font.
         </p>
         <p>
-          Our method is an experiment, not a reproduction of the Dither program. Cell allocation
-          limits overlap; fine stems and strokes can still touch. Outline clipping preserves the
-          selected region.
+          Whole motifs are fitted before drawing, keeping their petal and leaf edges intact. Very
+          narrow regions can leave gaps. Browser geometry and sampling differ from the source; fine
+          stems can still touch.
         </p>
         <h3>A few useful habits</h3>
         <p>
           Drag or resize the page frame, or use its dimensions. In Draw mode, trace a closed region
-          with your pointer. Color and setting changes grow a new proof automatically. “Grow a new
-          variation” changes the seed. Export includes the artwork and paper, without editing
-          guides.
+          with your pointer. Press “Grow pattern” when your settings are ready; moving the frame
+          does not restart growth. Change the seed for a new variation. Zoom enlarges the preview;
+          Fit brings the whole sheet back into view. Export includes the artwork and paper at its
+          original size, without editing guides.
         </p>
         <div className="notes-links">
           <a

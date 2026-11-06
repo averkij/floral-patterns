@@ -25,6 +25,6 @@ The overview and this snapshot should not be treated as identical specifications
 
 Use explicit stages: sampling, clipping, adjacency, relaxation, routing, assignment, geometry and rendering. Preserve intermediate results for inspection. Replace global mutable state with a per-generation context and seeded random streams.
 
-Before choosing Dither compilation or an independent TypeScript implementation, evaluate runtime availability, export support and reproducibility. No port is selected yet.
+The first browser experiment used an independent TypeScript approximation. Following the user's explicit request, the replacement ports the related typography demo, `orntxt.dh`, rather than this presets program. See [the source and dependency review](orntxt-code.md) and [implementation record](../development/shape-fill.md). The two files remain distinct references.
 
-No reuse license was established from the inspected source and README; a root `LICENSE` URL returned 404. That does not prove no license exists elsewhere. Resolve applicable terms before copying or translating substantial code into a published demo. The MIT project affiliation is not an MIT software license.
+No reuse license was established from the inspected source and README; a root `LICENSE` URL returned 404. That does not prove no license exists elsewhere. The later `orntxt.dh` review also inspected the tracked repository tree and records the source-derived port's provenance separately. The MIT project affiliation is not an MIT software license.

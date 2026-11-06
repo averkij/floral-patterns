@@ -159,6 +159,10 @@
     padding: 16px 24px 14px;
   }
 
+  .canvas-viewport-page .canvas-scroll-content {
+    padding-left: 42px;
+  }
+
   .canvas-viewport-shape .canvas-scroll-content {
     padding-left: 0;
     padding-right: 0;

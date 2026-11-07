@@ -280,7 +280,7 @@ export default memo(function PageGrowthPreview({ timeline, onComplete, onProgres
   }, [timeline, onComplete, onProgress]);
 
   return <div className="growth-preview" ref={surface} role="img"
-    aria-label="A continuous floral garden growing around the reserved rectangle">
+    aria-label="Цветочный сад растёт вокруг свободной области">
     <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
   </div>;
 });

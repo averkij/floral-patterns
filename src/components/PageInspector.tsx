@@ -1,12 +1,13 @@
 import { constrainRect, type PageConfig, type Visitor } from '../state';
 import { Check, ColorControls, Section, SeedControl, Slider } from './Controls';
 import { FLOWERS, defaultFlowerColors } from '../flowers';
+import FlowerGlyph from './FlowerGlyph';
 
 const visitors: [Visitor, string][] = [
-  ['butterfly', 'Butterflies'],
-  ['bee', 'Bees'],
-  ['bird', 'Birds'],
-  ['snail', 'Snails'],
+  ['butterfly', 'Бабочки'],
+  ['bee', 'Пчёлы'],
+  ['bird', 'Птицы'],
+  ['snail', 'Улитки'],
 ];
 export default function PageInspector({
   settings,
@@ -27,10 +28,11 @@ export default function PageInspector({
     update({ rect: constrainRect({ ...settings.rect, [key]: value }) });
   return (
     <>
-      <Section title="Composition">
+      <Section title="Композиция">
         <SeedControl seed={settings.seed} onChange={(seed) => update({ seed })} />
         <Slider
-          label="Density"
+          label="Плотность"
+          percent
           value={settings.density}
           min={0.2}
           max={1}
@@ -38,35 +40,37 @@ export default function PageInspector({
           onChange={(density) => update({ density })}
         />
         <div className="growth-controls">
-          <Check label="Watch growth" checked={watchGrowth} onChange={onWatchGrowth} />
-          <button onClick={onReplay} disabled={replayDisabled} aria-label="Replay growth">
-            Replay
+          <Check label="Анимация" checked={watchGrowth} onChange={onWatchGrowth} />
+          <button onClick={onReplay} disabled={replayDisabled} aria-label="Повторить анимацию">
+            Повтор
           </button>
         </div>
       </Section>
       <ColorControls palette={settings} onChange={update} />
-      <Section title="Flowers">
-        <p className="help-text flower-intro">Choose your varieties and their bloom colors.</p>
-        <div className="flower-list">
+      <Section title="Цветы" action={
+        <button className="text-button" onClick={() => update({ flowerColors: { ...defaultFlowerColors } })}>Сбросить цвета</button>
+      }>
+        <div className="flower-grid" role="group" aria-label="Виды цветов">
           {FLOWERS.map(flower => (
-            <div className="flower-row" key={flower.id}>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={settings.flowers.includes(flower.id)}
-                  disabled={settings.flowers.length === 1 && settings.flowers[0] === flower.id}
-                  onChange={(event) => update({
-                    flowers: FLOWERS.filter(f => f.id === flower.id
-                      ? event.target.checked
-                      : settings.flowers.includes(f.id)).map(f => f.id),
-                  })}
-                />
-                <span>{flower.label}</span>
-              </label>
-              <label className="color-well flower-color" style={{ backgroundColor: settings.flowerColors[flower.id] }}>
+            <div className="flower-tile" key={flower.id}>
+              <button className="flower-select"
+                aria-pressed={settings.flowers.includes(flower.id)}
+                aria-label={flower.label}
+                aria-disabled={settings.flowers.length === 1 && settings.flowers[0] === flower.id}
+                title={settings.flowers.length === 1 && settings.flowers[0] === flower.id ? 'Оставьте хотя бы один вид' : flower.label}
+                onClick={() => {
+                  if (settings.flowers.length === 1 && settings.flowers[0] === flower.id) return;
+                  update({ flowers: FLOWERS.filter(f => f.id === flower.id
+                    ? !settings.flowers.includes(f.id) : settings.flowers.includes(f.id)).map(f => f.id) });
+                }}>
+                <FlowerGlyph flower={flower.id} color={settings.flowerColors[flower.id]} />
+                <span className="flower-name">{flower.label}</span>
+                {settings.flowers.includes(flower.id) && <span className="flower-selected" aria-hidden="true">✓</span>}
+              </button>
+              <label className="color-well flower-color" title={`Цвет: ${flower.label}`} style={{ backgroundColor: settings.flowerColors[flower.id] }}>
                 <input
                   type="color"
-                  aria-label={`${flower.label} flower color`}
+                  aria-label={`Цвет: ${flower.label}`}
                   value={settings.flowerColors[flower.id]}
                   onChange={(event) => update({
                     flowerColors: { ...settings.flowerColors, [flower.id]: event.target.value },
@@ -76,50 +80,38 @@ export default function PageInspector({
             </div>
           ))}
         </div>
-        <button className="reset-flower-colors" onClick={() => update({ flowerColors: { ...defaultFlowerColors } })}>
-          Reset flower colors
-        </button>
-        <p className="help-text">Keep at least one selected. The seed picks up to four varieties per garden. Spring and autumn may show buds or seed heads.</p>
       </Section>
-      <Section title="Garden">
-        <label className="select-row">
-          <span>Season</span>
-          <select
-            value={settings.season}
-            onChange={(e) => update({ season: e.target.value as PageConfig['season'] })}
-          >
-            <option value="spring">Spring</option>
-            <option value="summer">Summer</option>
-            <option value="autumn">Autumn</option>
-          </select>
-        </label>
-        <p className="field-caption">Visitors allowed</p>
-        <div className="check-grid">
+      <Section title="Сад">
+        <div className="segmented" role="group" aria-label="Время года">
+          {(['spring', 'summer', 'autumn'] as const).map(season =>
+            <button key={season} aria-pressed={settings.season === season} onClick={() => update({ season })}>
+              {{ spring: 'Весна', summer: 'Лето', autumn: 'Осень' }[season]}
+            </button>)}
+        </div>
+        <div className="visitor-options" role="group" aria-label="Посетители">
           {visitors.map(([key, label]) => (
-            <Check
+            <button
               key={key}
-              label={label}
-              checked={settings.visitors.includes(key)}
-              onChange={(checked) =>
+              aria-pressed={settings.visitors.includes(key)}
+              onClick={() =>
                 update({
-                  visitors: checked
-                    ? [...settings.visitors, key]
-                    : settings.visitors.filter((v) => v !== key),
+                  visitors: settings.visitors.includes(key)
+                    ? settings.visitors.filter(v => v !== key)
+                    : [...settings.visitors, key],
                 })
               }
-            />
+            >{label}</button>
           ))}
         </div>
-        <p className="help-text">The seed decides who visits.</p>
       </Section>
-      <Section title="Reserved space">
+      <Section title="Свободная область">
         <div className="dimension-grid">
           {(['width', 'height', 'x', 'y'] as const).map((key) => (
             <label key={key}>
-              <span>{{ width: 'Width', height: 'Height', x: 'Left', y: 'Top' }[key]}</span>
+              <span>{{ width: 'Ширина', height: 'Высота', x: 'Слева', y: 'Сверху' }[key]}</span>
               <div>
                 <input
-                  aria-label={`Rectangle ${key}`}
+                  aria-label={`Область: ${{ width: 'ширина', height: 'высота', x: 'слева', y: 'сверху' }[key]}`}
                   type="number"
                   value={Math.round(settings.rect[key] * 10) / 10}
                   step="1"
@@ -135,13 +127,13 @@ export default function PageInspector({
                   }
                   onChange={(e) => rectangle(key, +e.target.value)}
                 />
-                <span>mm</span>
+                <span>мм</span>
               </div>
             </label>
           ))}
         </div>
         <Check
-          label="Show frame"
+          label="Рамка"
           checked={settings.showFrame}
           onChange={(showFrame) => update({ showFrame })}
         />

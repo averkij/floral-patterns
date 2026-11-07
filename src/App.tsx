@@ -14,7 +14,7 @@ export default function App() {
     [watchGrowth, setWatchGrowth] = useState(
       () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     ),
-    [shareLabel, setShareLabel] = useState('Copy link');
+    [shareLabel, setShareLabel] = useState('Ссылка');
   const { output, timeline, finishPlayback, playbackProgress, busy, status, error, current, generate, replay } = useGeneration(
     state,
     dragging || (state.tab === 'shape' && drawing),
@@ -37,8 +37,8 @@ export default function App() {
     return () => window.removeEventListener('hashchange', listener);
   }, []);
   useEffect(() => {
-    if (shareLabel === 'Copy link') return;
-    const timer = setTimeout(() => setShareLabel('Copy link'), 3000);
+    if (shareLabel === 'Ссылка') return;
+    const timer = setTimeout(() => setShareLabel('Ссылка'), 3000);
     return () => clearTimeout(timer);
   }, [shareLabel]);
   const grow = () => {
@@ -51,9 +51,9 @@ export default function App() {
     window.history.replaceState(null, '', hash);
     try {
       await navigator.clipboard.writeText(url);
-      setShareLabel('Link copied');
+      setShareLabel('Скопировано');
     } catch {
-      setShareLabel('Link in address bar');
+      setShareLabel('Ссылка в адресной строке');
     }
   };
   const download = () => {
@@ -68,9 +68,9 @@ export default function App() {
   return (
     <div className="studio-shell">
       <header className="masthead">
-        <h1 className="wordmark">Algo Floral Patterns</h1>
+        <h1 className="wordmark">Алгоритмические цветочные узоры</h1>
       </header>
-      <nav className="workspace-tabs" aria-label="Experiments">
+      <nav className="workspace-tabs" aria-label="Эксперименты">
         <button
           className={page ? 'active' : ''}
           aria-current={page ? 'page' : undefined}
@@ -80,7 +80,7 @@ export default function App() {
             setState((previous) => ({ ...previous, tab: 'page' }));
           }}
         >
-          <span>01</span> Page garden
+          Сад на странице
         </button>
         <button
           className={!page ? 'active' : ''}
@@ -91,13 +91,13 @@ export default function App() {
             setState((previous) => ({ ...previous, tab: 'shape' }));
           }}
         >
-          <span>02</span> Shape & letter
+          Форма и буква
         </button>
       </nav>
       <main className="studio-main">
         <section
           className={`workspace ${page ? 'page-workspace' : 'shape-workspace'}`}
-          aria-label={page ? 'Page garden workspace' : 'Shape and letter workspace'}
+          aria-label={page ? 'Холст сада на странице' : 'Холст фигуры и буквы'}
         >
           <CanvasViewport kind={page ? 'page' : 'shape'}>
             {page ? (
@@ -124,7 +124,7 @@ export default function App() {
             )}
           </CanvasViewport>
         </section>
-        <aside className="inspector" aria-label="Pattern settings">
+        <aside className="inspector" aria-label="Настройки узора">
           <div className="inspector-fields">
             {page ? (
               <PageInspector

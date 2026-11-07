@@ -64,7 +64,7 @@ export function PageSpecimen({
           <img
             className="pattern-image"
             src={url}
-            alt="Generated A4 floral garden surrounding a reserved rectangle"
+            alt="Цветочный узор на странице А4 со свободной областью"
             draggable={false}
           />
         )}
@@ -90,7 +90,7 @@ export function PageSpecimen({
               onPointerDown={(e) => begin(e, 'move')}
               tabIndex={0}
               role="button"
-              aria-label="Move reserved rectangle. Use arrow keys, or edit dimensions in Reserved space."
+              aria-label="Переместить свободную область. Используйте стрелки или поля размеров."
               onKeyDown={(e) => {
                 const delta: Record<string, [number, number]> = {
                   ArrowLeft: [-1, 0],
@@ -165,7 +165,7 @@ export function ShapeSpecimen({
           <img
             className="pattern-image"
             src={url}
-            alt="Floral pattern filling the selected shape"
+            alt="Цветочный узор внутри выбранной фигуры"
             draggable={false}
           />
         )}
@@ -200,7 +200,7 @@ export function ShapeSpecimen({
                 }, 0) / 2,
               );
             if (p.length < 3 || area < 2500) {
-              setHint('Draw a little larger so the flowers have room.');
+              setHint('Нарисуйте контур побольше, чтобы хватило места для цветов.');
               setPoints([]);
               return;
             }
@@ -234,7 +234,7 @@ export function ShapeSpecimen({
         </svg>
         {drawing && (
           <div className="drawing-instruction">
-            {hint || 'Drag to draw. Release to close the outline.'}
+            {hint || 'Рисуйте, удерживая кнопку. Отпустите, чтобы замкнуть контур.'}
           </div>
         )}
       </div>

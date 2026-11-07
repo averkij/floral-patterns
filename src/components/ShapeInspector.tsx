@@ -15,12 +15,12 @@ export default function ShapeInspector({
   const mode = settings.kind === 'text' ? 'text' : settings.kind === 'custom' ? 'custom' : 'shape';
   return (
     <>
-      <Section title="Region">
-        <div className="segmented" aria-label="Region type">
+      <Section title="Область">
+        <div className="segmented" role="group" aria-label="Тип области">
           {[
-            ['shape', 'Shape'],
-            ['text', 'Letter'],
-            ['custom', 'Draw'],
+            ['shape', 'Фигура'],
+            ['text', 'Буква'],
+            ['custom', 'Рисунок'],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -44,7 +44,7 @@ export default function ShapeInspector({
                 aria-pressed={settings.kind === kind}
                 onClick={() => update({ kind })}
               >
-                {kind === 'circle' ? 'Circle' : kind === 'arch' ? 'Arch' : 'Heart'}
+                {kind === 'circle' ? 'Круг' : kind === 'arch' ? 'Арка' : 'Сердце'}
               </button>
             ))}
           </div>
@@ -52,37 +52,33 @@ export default function ShapeInspector({
           <>
             <input
               className="letter-input"
-              aria-label="Letter or word"
+              aria-label="Буква или слово"
               value={settings.text}
               maxLength={6}
               onChange={(e) => update({ text: [...e.target.value].slice(0, 6).join('') })}
             />
             <select
               className="font-select"
-              aria-label="Lettering font"
+              aria-label="Шрифт букв"
               value={settings.font}
               onChange={(e) => update({ font: e.target.value as 'serif' | 'sans' })}
             >
-              <option value="serif">Editorial serif</option>
-              <option value="sans">Modern sans</option>
+              <option value="serif">С засечками</option>
+              <option value="sans">Без засечек</option>
             </select>
-            <p className="help-text">Up to 6 characters. Try a monogram.</p>
           </>
         ) : (
           <>
             <button className="draw-button" onClick={onDraw}>
-              {drawing ? 'Drawing mode is on' : 'Draw a new outline'}
+              {drawing ? 'Режим рисования' : 'Нарисовать контур'}
             </button>
-            <p className="help-text">
-              Drag on the canvas to draw a closed region. Then press Grow pattern.
-            </p>
           </>
         )}
       </Section>
-      <Section title="Composition">
+      <Section title="Композиция">
         <SeedControl seed={settings.seed} onChange={(seed) => update({ seed })} />
         <Slider
-          label="Density"
+          label="Плотность"
           min={60}
           max={260}
           step={10}
@@ -91,9 +87,9 @@ export default function ShapeInspector({
         />
       </Section>
       <ColorControls palette={settings} onChange={update} />
-      <Section title="Detail">
+      <Section title="Детали">
         <Slider
-          label="Flower scale"
+          label="Размер цветов"
           min={0.65}
           max={1.5}
           step={0.05}
@@ -102,12 +98,12 @@ export default function ShapeInspector({
         />
         <div className="check-grid">
           <Check
-            label="Show cells"
+            label="Ячейки"
             checked={settings.showCells}
             onChange={(showCells) => update({ showCells })}
           />
           <Check
-            label="Show outline"
+            label="Контур"
             checked={settings.showOutline}
             onChange={(showOutline) => update({ showOutline })}
           />

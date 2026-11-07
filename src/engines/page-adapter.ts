@@ -102,8 +102,8 @@ export function composeContinuousPage(settings: PageSettings, raw: ContinuousRes
   const clip = `M0 0H${width}V${height}H0Z M${left} ${bottom}V${top}H${right}V${bottom}Z`;
   const metadata = escapeXml(JSON.stringify({ adapter: PAGE_ADAPTER, revision: FLORILEGIUM_REVISION, settings }));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 ${width} ${height}">
-<title>Florilegium — continuous A4 garden, seed ${settings.seed}</title>
-<desc>One continuous upright garden around a reserved rectangle. Florilegium by Kevin Raymond, MIT; continuous domain, obstacle-aware scaffolding and compact event recording by Floral Patterns.</desc>
+<title>Florilegium — сад на странице А4, вариант ${settings.seed}</title>
+<desc>Цветочный сад вокруг свободной области. Florilegium: Kevin Raymond, лицензия MIT; адаптация области роста и анимации: Алгоритмические цветочные узоры.</desc>
 <metadata>${metadata}</metadata>
 <defs><clipPath id="garden-reservation" clipPathUnits="userSpaceOnUse"><path d="${clip}" clip-rule="evenodd" fill-rule="evenodd"/></clipPath></defs>
 <rect width="${width}" height="${height}" fill="#${settings.paper.replace('#', '')}"/>

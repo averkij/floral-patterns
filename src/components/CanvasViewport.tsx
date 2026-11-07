@@ -78,22 +78,21 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
         className="canvas-scrollport"
         ref={viewport}
         role="region"
-        aria-label={`${kind === 'page' ? 'A4 garden' : 'Shape'} preview${fitting ? '' : ` at ${zoom} percent, scroll to explore`}`}
+        aria-label={`${kind === 'page' ? 'Сад на странице А4' : 'Фигура'}: предпросмотр${fitting ? '' : `, масштаб ${zoom}%, доступна прокрутка`}`}
         tabIndex={0}
       >
         <div className="canvas-scroll-content">
-          <div className="canvas-zoom-controls" role="group" aria-label="Preview controls">
-            <button type="button" onClick={() => step(-1)} disabled={effectiveZoom <= 25} aria-label="Zoom out" title="Zoom out">−</button>
+          <div className="canvas-zoom-controls" role="group" aria-label="Масштаб холста">
+            <button type="button" onClick={() => step(-1)} disabled={effectiveZoom <= 25} aria-label="Уменьшить" title="Уменьшить">−</button>
             <select
-              aria-label="Preview zoom"
+              aria-label="Масштаб"
               value={zoom === null ? 'fit' : String(zoom)}
               onChange={event => event.target.value === 'fit' ? fit() : changeZoom(Number(event.target.value))}
             >
-              <option value="fit">Fit</option>
+              <option value="fit">Вписать</option>
               {ZOOM_LEVELS.map(level => <option value={level} key={level}>{level}%</option>)}
             </select>
-            <button type="button" onClick={() => step(1)} disabled={effectiveZoom >= 200} aria-label="Zoom in" title="Zoom in">+</button>
-            <button type="button" className="canvas-fit-button" onClick={fit} aria-pressed={fitting}>Fit</button>
+            <button type="button" onClick={() => step(1)} disabled={effectiveZoom >= 200} aria-label="Увеличить" title="Увеличить">+</button>
           </div>
           <div className="canvas-stage-host" ref={stage}>{children}</div>
         </div>

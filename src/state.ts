@@ -63,10 +63,10 @@ export const initialState: StudioState = {
   },
 };
 export const palettes: { name: string; colors: Palette }[] = [
-  { name: 'Delft', colors: { ink: '#34486a', accent: '#b99455', paper: '#fffefa' } },
-  { name: 'Herbarium', colors: { ink: '#626b4d', accent: '#d59a8f', paper: '#fffefa' } },
-  { name: 'Mulberry', colors: { ink: '#653e54', accent: '#bf8d75', paper: '#faf5ed' } },
-  { name: 'Graphite', colors: { ink: '#333a36', accent: '#88958a', paper: '#f5f5ef' } },
+  { name: 'Делфт', colors: { ink: '#34486a', accent: '#b99455', paper: '#fffefa' } },
+  { name: 'Гербарий', colors: { ink: '#626b4d', accent: '#d59a8f', paper: '#fffefa' } },
+  { name: 'Шелковица', colors: { ink: '#653e54', accent: '#bf8d75', paper: '#faf5ed' } },
+  { name: 'Графит', colors: { ink: '#333a36', accent: '#88958a', paper: '#f5f5ef' } },
 ];
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const number = (value: unknown, fallback: number, min: number, max: number) =>

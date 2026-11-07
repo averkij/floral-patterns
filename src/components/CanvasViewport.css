@@ -1,5 +1,5 @@
 .canvas-viewport {
-  --canvas-scroll-limit: max(180px, calc(100dvh - 170px));
+  --canvas-scroll-limit: max(180px, calc(100dvh - 132px));
   --canvas-chrome-height: 66px;
   width: 100%;
   min-width: 0;
@@ -7,7 +7,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding-bottom: 12px;
+  padding-bottom: 0;
 }
 
 .canvas-zoom-controls {
@@ -21,14 +21,20 @@
   display: flex;
   align-items: center;
   gap: 0;
+  border: 1px solid #dce2eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px #1b2b4410;
+  overflow: hidden;
 }
 
 .canvas-zoom-controls button,
 .canvas-zoom-controls select {
   height: 30px;
   min-height: 30px;
-  border-color: #b7bdad;
-  background: var(--paper);
+  border: 0;
+  border-radius: 0;
+  background: #fff;
   font-size: 11px;
 }
 
@@ -40,21 +46,9 @@
 }
 
 .canvas-zoom-controls select {
-  width: 76px;
-  margin: 0 -1px;
-  padding: 3px 4px 3px 10px;
+  width: 90px;
+  padding: 3px 4px 3px 6px;
   font-variant-numeric: tabular-nums;
-}
-
-.canvas-zoom-controls .canvas-fit-button {
-  width: 42px;
-  margin-left: 9px;
-  font-size: 11px;
-}
-
-.canvas-fit-button[aria-pressed='true'] {
-  color: var(--olive);
-  background: #e9ece1;
 }
 
 .canvas-scrollport {
@@ -134,7 +128,7 @@
 
 @media (max-width: 680px) {
   .canvas-viewport {
-    --canvas-scroll-limit: max(180px, calc(100dvh - 155px));
+    --canvas-scroll-limit: max(180px, calc(100dvh - 144px));
     --canvas-chrome-height: 72px;
   }
 

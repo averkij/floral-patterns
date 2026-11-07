@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPageEngine, type PageResult, type PageTimeline } from './engines/page-engine';
+import { generationError } from './i18n';
 import type { StudioState } from './state';
 
 export type Generated = { svg: string; outline: string; detail: string; key: string };
@@ -33,12 +34,12 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
     consumed.current = request;
     if (tab === 'shape' && state.shape.kind === 'custom' && state.shape.points.length < 3) {
       setBusy(false);
-      setStatus('Draw an outline to begin.');
+      setStatus('Сначала нарисуйте контур.');
       return;
     }
     setBusy(true);
     setPlayback(null);
-    setStatus(tab === 'page' ? 'Preparing the garden…' : 'Finding room for flowers…');
+    setStatus(tab === 'page' ? 'Подготавливаем сад…' : 'Размещаем цветы…');
     const complete = (result: Omit<Generated, 'key'>) => {
       if (!active) return;
       if (timeout) clearTimeout(timeout);
@@ -52,15 +53,15 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
       if (timeout) clearTimeout(timeout);
       setBusy(false);
       setStatus('');
-      setError(cause instanceof Error ? cause.message : String(cause));
+      setError(generationError(cause));
     };
     const presentPage = (result: PageResult) => {
       if (!active) return;
-      const generated = { svg: result.svg, outline: '', detail: 'A4 garden · Florilegium', key };
+      const generated = { svg: result.svg, outline: '', detail: 'Сад на странице А4 · Florilegium', key };
       setOutputs(previous => ({ ...previous, page: generated }));
       if (request.animate && result.timeline) {
         setPlayback({ timeline: result.timeline, request });
-        setStatus('Growing the garden…');
+        setStatus('Выращиваем сад…');
       } else {
         setBusy(false);
         setStatus('');
@@ -78,7 +79,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
           const result = await engine.generate(
             { version: 1, ...JSON.parse(key) },
             (progress) => {
-              if (active) setStatus(progress.label);
+              if (active) setStatus(progress.stage === 'loading' ? 'Загружаем генератор…' : 'Создаём узор…');
             },
             request.animate,
           );
@@ -99,7 +100,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
             height: 800,
             kind: settings.kind,
             text: settings.text,
-            fontFamily: settings.font === 'serif' ? 'Floralia Serif' : 'Arial',
+            fontFamily: settings.font === 'serif' ? '"Floralia Serif", Georgia, serif' : 'Arial',
             points: settings.points,
           });
           worker = new Worker(new URL('./engines/shape-worker.ts', import.meta.url), {
@@ -115,7 +116,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
               complete({
                 svg: data.result.svg,
                 outline: mask.path,
-                detail: `${data.result.stats.cells} cells · ${data.result.stats.flowers} flowers`,
+                detail: `${data.result.stats.cells} ячеек · ${data.result.stats.flowers} цветов`,
               });
             worker?.terminate();
           };
@@ -159,7 +160,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
     setStatus('');
   }, [playback]);
   const playbackProgress = useCallback((percent: number) => {
-    setStatus(`Growing the garden · ${percent}%`);
+    setStatus(`Выращиваем сад · ${percent}%`);
   }, []);
   useEffect(() => {
     if (!watchGrowth && playback) finishPlayback();
@@ -167,7 +168,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
   return {
     output: outputs[tab],
     busy,
-    status: status || (outputs[tab].key !== key ? 'Press Grow pattern to apply these settings.' : ''),
+    status: status || (outputs[tab].key !== key ? 'Нажмите «Создать узор», чтобы применить настройки.' : ''),
     error,
     current: outputs[tab].key === key,
     timeline: tab === 'page' && playback?.request?.key === key ? playback.timeline : null,

@@ -61,10 +61,10 @@ export function Icon({
     </svg>
   );
 }
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
     <section className="control-section">
-      <h2>{title}</h2>
+      <div className="section-heading"><h2>{title}</h2>{action}</div>
       {children}
     </section>
   );
@@ -77,6 +77,7 @@ export function Slider({
   step = 1,
   onChange,
   suffix = '',
+  percent = false,
 }: {
   label: string;
   value: number;
@@ -84,6 +85,7 @@ export function Slider({
   max: number;
   step?: number;
   suffix?: string;
+  percent?: boolean;
   onChange: (n: number) => void;
 }) {
   return (
@@ -99,8 +101,8 @@ export function Slider({
         onChange={(e) => onChange(+e.target.value)}
       />
       <output>
-        {Number.isInteger(step) ? value : value.toFixed(2)}
-        {suffix}
+        {percent ? Math.round(value * 100) : value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}
+        {percent ? '%' : suffix}
       </output>
     </label>
   );
@@ -124,7 +126,7 @@ export function Check({
 export function SeedControl({ seed, onChange }: { seed: number; onChange: (n: number) => void }) {
   return (
     <div className="seed-row">
-      <label htmlFor="seed">Seed</label>
+      <label htmlFor="seed">Вариант</label>
       <input
         id="seed"
         type="number"
@@ -137,8 +139,8 @@ export function SeedControl({ seed, onChange }: { seed: number; onChange: (n: nu
       />
       <button
         className="icon-button"
-        aria-label="Randomize seed"
-        title="Randomize seed"
+        aria-label="Случайный вариант"
+        title="Случайный вариант"
         onClick={() => onChange(1 + Math.floor(Math.random() * 999999))}
       >
         <Icon name="dice" />
@@ -154,34 +156,34 @@ export function ColorControls({
   onChange: (p: Partial<Palette>) => void;
 }) {
   return (
-    <Section title="Ink & paper">
+    <Section title="Палитра">
       <div className="color-controls">
         {(['ink', 'accent', 'paper'] as const).map((key) => (
           <label className="color-control" key={key}>
             <span className="color-well" style={{ backgroundColor: palette[key] }}>
               <input
                 type="color"
-                aria-label={`${key[0].toUpperCase()}${key.slice(1)} color`}
+                aria-label={`Цвет: ${{ ink: 'зелень', accent: 'акцент', paper: 'бумага' }[key]}`}
                 value={palette[key]}
                 onChange={(e) => onChange({ [key]: e.target.value })}
               />
             </span>
-            <span>{key[0].toUpperCase() + key.slice(1)}</span>
+            <span>{{ ink: 'Зелень', accent: 'Акцент', paper: 'Бумага' }[key]}</span>
           </label>
         ))}
       </div>
       <div className="palette-row">
-        <span>Palette</span>
         {palettes.map((p) => (
           <button
             className="palette-swatch"
             key={p.name}
             title={p.name}
-            aria-label={`${p.name} palette`}
+            aria-label={`Палитра: ${p.name}`}
             onClick={() => onChange(p.colors)}
             style={{ backgroundColor: p.colors.ink }}
           >
             <span style={{ backgroundColor: p.colors.accent }} />
+            <span style={{ backgroundColor: p.colors.paper }} />
           </button>
         ))}
       </div>
@@ -208,12 +210,12 @@ export function Actions({
   return (
     <div className="actions">
       <button className="primary-button" onClick={onGrow} disabled={busy || growDisabled} aria-busy={busy}>
-        {busy ? 'Growing…' : 'Grow pattern'}
+        {busy ? 'Создаём…' : 'Создать узор'}
         {busy ? <span className="button-spinner" aria-hidden="true" /> : <Icon name="arrow" />}
       </button>
       <div className="action-pair">
         <button disabled={!hasOutput || busy} onClick={onExport}>
-          Export SVG
+          Скачать SVG
         </button>
         <button onClick={onShare}>{shareLabel}</button>
       </div>

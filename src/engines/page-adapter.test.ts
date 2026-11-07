@@ -7,6 +7,7 @@ import type { ContinuousResult } from './page-adapter';
 import { adaptGrowSource } from './page-lua';
 import { continuousDomainLua } from './page-domain';
 import type { PageSettings } from './page-types';
+import { FLOWERS, defaultFlowerColors } from '../flowers';
 
 const settings: PageSettings = {
   version: 1, seed: 7, rect: { x: 56, y: 52, width: 108, height: 189 },
@@ -113,4 +114,35 @@ test('invalid settings and a changed upstream source fail explicitly', () => {
   expect(() => validatePageSettings({ ...settings, ink: 'red";error(1)' })).toThrow(/hexadecimal/);
   expect(() => validatePageSettings({ ...settings, seed: Number.NaN })).toThrow(/seed/);
   expect(() => adaptGrowSource('-- wrong revision')).toThrow(/pinned Florilegium source/);
+  expect(() => validatePageSettings({ ...settings, flowers: [] })).toThrow(/flower/);
+  expect(() => validatePageSettings({ ...settings, flowerColors: { ...defaultFlowerColors, rose: 'red' } })).toThrow(/hexadecimal/);
 });
+
+test('all eight flower choices generate distinct blooms, recolor without moving paths, and restore hooks', async () => {
+  const geometry = (body: string) => [...body.matchAll(/<path\b[^>]*\bd="([^"]*)"/g)].map(m => m[1]);
+  const originals = await lua.doString(`local s,n=require('florilegium-species'),require('florilegium-native')
+    saved_community,saved_bloom,saved_draw=s.community,n.bloom,n.draw return true`);
+  expect(originals).toBe(true);
+  lua.global.setTop(0);
+  const signatures = new Set<string>();
+  for (const flower of FLOWERS) {
+    const input: PageSettings = { ...settings, density: .2, flowers: [flower.id], flowerColors: { ...defaultFlowerColors } };
+    validatePageSettings(input);
+    const raw = await generate(input);
+    expect(raw.body).not.toMatch(/NaN|Infinity|undefined/);
+    expect(raw.stats.motifs).toBeGreaterThan(0);
+    signatures.add(JSON.stringify(geometry(raw.body)));
+    const recolored = await generate({ ...input, flowerColors: { ...defaultFlowerColors, [flower.id]: '#19c7ba' } });
+    expect(recolored.body).not.toBe(raw.body);
+    expect(geometry(recolored.body)).toEqual(geometry(raw.body));
+    expect(recolored.events).toEqual(raw.events);
+    expect(recolored.stats).toEqual(raw.stats);
+    expect(await lua.doString(`local s,n=require('florilegium-species'),require('florilegium-native')
+      return s.community==saved_community and n.bloom==saved_bloom and n.draw==saved_draw`)).toBe(true);
+    lua.global.setTop(0);
+  }
+  expect(signatures.size).toBe(8);
+  const mixed = { ...settings, density: .2, flowers: FLOWERS.map(f => f.id), flowerColors: defaultFlowerColors };
+  const first = await generate(mixed);
+  expect((await generate(mixed)).body).toBe(first.body);
+}, 120_000);

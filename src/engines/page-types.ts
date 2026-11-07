@@ -1,4 +1,6 @@
-export const PAGE_ADAPTER = 'florilegium-continuous-v2' as const;
+import type { Flower, FlowerColors } from '../flowers';
+
+export const PAGE_ADAPTER = 'florilegium-continuous-v3' as const;
 export const FLORILEGIUM_REVISION = '9fbaf56d53e6525e02da05cd802ea7da82052099' as const;
 
 export type PageVisitor =
@@ -31,6 +33,9 @@ export interface PageSettings {
   season: PageSeason;
   /** Allowed visitors; their presence remains a decision of the upstream seed. */
   visitors: PageVisitor[];
+  /** Omitted only for legacy callers using the original sampled community. */
+  flowers?: Flower[];
+  flowerColors?: FlowerColors;
 }
 
 export interface VisitorSummary {

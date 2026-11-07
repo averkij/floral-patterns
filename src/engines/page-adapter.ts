@@ -2,6 +2,8 @@ import { FLORILEGIUM_REVISION, PAGE_ADAPTER } from './page-types';
 import type { PageGrowthEvent, PageResult, PageSettings, PageVisitor, VisitorSummary } from './page-types';
 import { COMPACT_TIMELINE_LUA } from './page-lua';
 import { continuousDomainLua } from './page-domain';
+import { flowersLua } from './page-flowers';
+import { FLOWERS, isFlower } from '../flowers';
 
 export const LUA_MODULES = [
   'florilegium', 'florilegium-ink', 'florilegium-flora', 'florilegium-grow',
@@ -35,6 +37,8 @@ export function validatePageSettings(settings: PageSettings): void {
   if (!Number.isFinite(settings.density) || settings.density < 0.2 || settings.density > 1) throw new Error('Choose a density between 0.2 and 1.');
   if (!['spring', 'summer', 'autumn'].includes(settings.season)) throw new Error('Choose spring, summer or autumn.');
   if (!Array.isArray(settings.visitors) || settings.visitors.some(visitor => !Object.hasOwn(VISITOR_GROUPS, visitor))) throw new Error('This page configuration includes an unknown visitor.');
+  if (settings.flowers !== undefined && (!Array.isArray(settings.flowers) || !settings.flowers.length || settings.flowers.some(f => !isFlower(f)))) throw new Error('Choose at least one known flower.');
+  if (settings.flowerColors !== undefined && (!settings.flowerColors || FLOWERS.some(f => !/^#[0-9a-f]{6}$/i.test(settings.flowerColors![f.id])))) throw new Error('Flower colors must have six hexadecimal digits.');
 }
 
 /** One community, one free-space field, one event schedule on the real A4 page. */
@@ -55,6 +59,7 @@ export function continuousPageLua(settings: PageSettings): string {
       if kind == "visitor" and not allowed[species.vsample(options.seed, options.role).group] then return true end
       return original_draw(kind, plant, seed, options)
     end
+    ${flowersLua(settings)}
     grow.page = function(g)
       configure(g)
       g.anim, g.compact = true, true
@@ -77,6 +82,7 @@ export function continuousPageLua(settings: PageSettings): string {
       recording.stats.visitors = visitors
       return { body = body, events = events, duration = recording.total, stats = recording.stats }
     end)
+    restore_flowers()
     grow.page, native.draw = original_page, original_draw
     restore_domain()
     if not ok then error(result) end

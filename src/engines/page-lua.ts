@@ -13,6 +13,10 @@ export function adaptGrowSource(input: string): string {
   };
   replace('  local NSTEM = D >= 0.6 and 3 or D >= 0.25 and 2 or 1', '  local NSTEM = g.stem_count or (D >= 0.6 and 3 or D >= 0.25 and 2 or 1)');
   replace('    mains[k] = pts', '    if g.stem_path then pts = g.stem_path(pts, k, g) end\n    mains[k] = pts');
+  replace('  -- visitors on the stems: a snail crawling up a main stem, and now and then a',
+    '  if g.place_visitors then g.place_visitors({field=fld, sdist=sdist, mains=mains, mainev=mainev,\n' +
+    '    event=event, place=place, stem=stem, nearest=nearest_stem, visitors=vlist}) end\n' +
+    '  -- visitors on the stems: a snail crawling up a main stem, and now and then a');
   replace('  local function top(sp, x, y, a, target, kmin, kmax, ev, single)',
     '  local function top(sp, x, y, a, target, kmin, kmax, ev, single)\n    if g.terminal_limit then target, kmin, kmax = g.terminal_limit(x, y, target, kmin, kmax) end');
   replace('  local function stem(pts, w0, w1, proxy)\n    ink.layer(L_STEM)',
@@ -38,12 +42,13 @@ export function adaptGrowSource(input: string): string {
 export const COMPACT_TIMELINE_LUA = String.raw`
   local function compact_svg(recording)
     local svg = require("florilegium-svg")
-    local ids, events = {}, {}
+    local ids, events, visitors = {}, {}, {}
     local CM = 72 / 2.54
     for i, event in ipairs(recording.events) do
       if event.kind ~= "overlay" then
         local id = "e" .. i
         ids[event] = id
+        visitors[id] = event.visitor
         local entry = { id = id, kind = event.kind == "stem" and "stem" or "bloom",
           start = event.t0, duration = event.dur, x = (event.x or 0) * CM, y = (event.y or 0) * CM }
         if event.points and #event.points > 1 then
@@ -69,7 +74,8 @@ export const COMPACT_TIMELINE_LUA = String.raw`
         local function flush()
           if #parts == 0 then return end
           serial = serial + 1
-          if current then output[#output + 1] = '<g data-growth-event="' .. current .. '">' end
+          if current then output[#output + 1] = '<g data-growth-event="' .. current .. '"' ..
+            (visitors[current] and ' data-visitor="' .. visitors[current] .. '"' or '') .. '>' end
           svg.translate("q 1 J 1 j\n" .. table.concat(parts, "\n") .. "\nQ", output, "garden-" .. serial .. "-")
           if current then output[#output + 1] = '</g>' end
           parts = {}

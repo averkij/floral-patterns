@@ -1,7 +1,7 @@
 import type { Flower, FlowerColors } from '../flowers';
 import type { TextFont } from '../text-fonts';
 
-export const PAGE_ADAPTER = 'florilegium-continuous-v4' as const;
+export const PAGE_ADAPTER = 'florilegium-continuous-v5' as const;
 export const FLORILEGIUM_REVISION = '9fbaf56d53e6525e02da05cd802ea7da82052099' as const;
 
 export type PageVisitor =
@@ -50,6 +50,8 @@ export interface VisitorSummary {
   group: string;
   text: string;
   at: string;
+  /** Growth-field evidence in native centimetres, before later foliage. */
+  placement?: { x: number; y: number; radius: number; clearance?: number; scale: number; width: number; height: number };
 }
 
 export interface PageGrowthEvent {

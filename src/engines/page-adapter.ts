@@ -59,20 +59,16 @@ export function continuousPageLua(settings: PageSettings): string {
     local species = require("florilegium-species")
     local original_page, original_draw = grow.page, native.draw
     local recording
-    local visitor_body, visitor_events
     ${continuousDomainLua(settings)}
     ${COMPACT_TIMELINE_LUA}
-    native.draw = function(kind, plant, seed, options)
-      if kind == "visitor" then return true end
-      return original_draw(kind, plant, seed, options)
-    end
     ${flowersLua(settings)}
     ${visitorsLua(settings)}
     grow.page = function(g)
       configure(g)
+      prepare_visitors()
+      g.visitors, g.place_visitors = false, place_visitors
       g.anim, g.compact = true, true
       recording = original_page(g)
-      visitor_body, visitor_events = append_visitors(recording)
       return { stats = recording.stats }
     end
     local ok, result = pcall(function()
@@ -84,8 +80,7 @@ export function continuousPageLua(settings: PageSettings): string {
         density = ${settings.density}, season = "${settings.season}", visitors = true, id = "garden-"
       })
       local body, events = compact_svg(recording)
-      for _, event in ipairs(visitor_events) do events[#events+1] = event end
-      return { body = body .. visitor_body, events = events, duration = recording.total, stats = recording.stats }
+      return { body = body, events = events, duration = recording.total, stats = recording.stats }
     end)
     restore_flowers()
     grow.page, native.draw = original_page, original_draw

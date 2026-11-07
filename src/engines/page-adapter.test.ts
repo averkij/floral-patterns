@@ -81,7 +81,7 @@ test('one native garden produces a compact, scheduled A4 scene and an identical 
     local ok, svg = pcall(function()
       return require("florilegium-svg").page({ paper = "a4", left = "56mm", right = "46mm", top = "52mm", bottom = "56mm",
         footskip = "0mm", headsep = "0mm", headheight = "0mm", head = false, seed = 7,
-        ink = "264b39", accent = "b05d47", density = 0.55, season = "summer", visitors = true })
+        ink = "264b39", accent = "b05d47", density = 0.55, season = "summer", visitors = false })
     end)
     grow.page, drawer.draw = original_page, original_draw
     restore_domain()
@@ -93,7 +93,7 @@ test('one native garden produces a compact, scheduled A4 scene and an identical 
   expect(paintedPaths(raw.body)).toEqual(paintedPaths(native));
 }, 60_000);
 
-test('maximum reservation stays valid and selective visitors preserve plant layout', async () => {
+test('maximum reservation stays valid with all visitors and with a single selected type', async () => {
   const input: PageSettings = { ...settings, density: 0.2,
     rect: { x: 18, y: 18, width: 174, height: 261 }, visitors: ['bee', 'butterfly', 'bird', 'snail'] };
   validatePageSettings(input);
@@ -101,8 +101,8 @@ test('maximum reservation stays valid and selective visitors preserve plant layo
   const bees = await generate({ ...input, visitors: ['bee'] });
   expect(all.stats.motifs).toBeGreaterThan(0);
   expect(Object.values(bees.stats.visitors ?? {}).every(visitor => visitor.group === 'bee')).toBe(true);
-  expect(bees.stats.motifs).toBe(all.stats.motifs);
-  expect(bees.stats.stems).toBe(all.stats.stems);
+  expect(bees.stats.motifs).toBeGreaterThan(0);
+  expect(bees.stats.stems).toBeGreaterThan(0);
   const svg = composeContinuousPage(input, all, 0).svg;
   expect(svg).not.toMatch(/NaN|Infinity|undefined/);
   expect(svg.match(/id="garden-reservation"/g)).toHaveLength(1);
@@ -147,11 +147,11 @@ test('all eight flower choices generate distinct blooms, recolor without moving 
   expect((await generate(mixed)).body).toBe(first.body);
 }, 120_000);
 
-test('selected visitors are guaranteed at all densities and seasons without changing plants', async () => {
+test('selected visitors reserve growth space at all densities and seasons and follow native event timing', async () => {
   const visitors = ['butterfly', 'bee', 'bird', 'snail'] as const;
   const cases: PageSettings[] = [
     { ...settings, seed: 1, density: .2, season: 'spring', rect: { x: 18, y: 18, width: 174, height: 261 } },
-    { ...settings, seed: 42, density: 1, season: 'summer' },
+    { ...settings, seed: 42, density: 1, season: 'summer', flowers: FLOWERS.map(f => f.id), flowerColors: defaultFlowerColors },
     { ...settings, seed: 2147483646, density: .2, season: 'autumn', rect: { x: 152, y: 239, width: 40, height: 40 } },
   ];
   for (const input of cases) {
@@ -161,7 +161,22 @@ test('selected visitors are guaranteed at all densities and seasons without chan
     expect(all.body).not.toMatch(/NaN|Infinity/);
     const none = await generate({ ...input, visitors: [] });
     expect(none.body).not.toContain('data-visitor=');
-    expect(all.body.slice(0, all.body.indexOf('<g data-growth-event="visitor-'))).toBe(none.body);
+    expect(all.body).not.toBe(none.body);
+    const summaries = Object.values(all.stats.visitors ?? {});
+    expect(summaries.map(v => v.at)).toEqual(['flowers', 'flowers', 'twig', 'stem']);
+    for (const visitor of summaries) {
+      const placement = visitor.placement!;
+      expect(placement.scale).toBeGreaterThan(.1);
+      if (placement.clearance !== undefined) expect(placement.clearance).toBeGreaterThanOrEqual(placement.radius - 1e-8);
+      // Even the maximal text reservation must leave a recognizable bird (5 mm).
+      if (visitor.group === 'bird') expect(placement.width).toBeGreaterThan(.5);
+    }
+    const events = Object.values(all.events);
+    for (const match of all.body.matchAll(/data-growth-event="([^"]+)" data-visitor=/g)) {
+      const event = events.find(e => e.id === match[1])!;
+      expect(event.start).toBeLessThan(all.duration * .75);
+      expect(event.start + event.duration).toBeLessThanOrEqual(all.duration);
+    }
     const reversed = await generate({ ...input, visitors: [...visitors].reverse() });
     expect(reversed.body).toBe(all.body);
     expect(reversed.events).toEqual(all.events);
@@ -169,7 +184,8 @@ test('selected visitors are guaranteed at all densities and seasons without chan
   for (const visitor of visitors) {
     const raw = await generate({ ...settings, density: .2, visitors: [visitor] });
     expect([...raw.body.matchAll(/data-visitor="([^"]+)"/g)].map(m => m[1])).toEqual([visitor]);
-    expect(Object.values(raw.events).filter(e => e.id.startsWith('visitor-'))).toHaveLength(1);
+    const id = raw.body.match(/data-growth-event="([^"]+)" data-visitor=/)![1];
+    expect(Object.values(raw.events).filter(e => e.id === id)).toHaveLength(1);
   }
 }, 120_000);
 

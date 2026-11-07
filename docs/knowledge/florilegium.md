@@ -6,7 +6,7 @@ Reviewed local revision `9fbaf56d53e6525e02da05cd802ea7da82052099` on 2026-11-06
 
 ## Source findings
 
-Follow-up visitor review, 2026-11-07: pinned `florilegium-grow.lua` randomly enables visitors and disables several types below density 0.3; placement can subsequently reject them. An allowed type is therefore not an appearance guarantee. Our v4 adapter explicitly draws selected native visitors after plant generation, measured into outer page bands. See [source locators, implementation evidence and limitations](../development/selected-visitors.md).
+Follow-up visitor review, 2026-11-07: pinned `florilegium-grow.lua` randomly enables visitors and disables several types below density 0.3; placement can subsequently reject them. An allowed type is therefore not an appearance guarantee. The original grower queries and reserves its shared free-space field, with snails attached to stems and birds on supporting twigs. Our v4 guarantee bypassed that field and overlaid visitors after plant generation, causing visible intersections. The v5 correction places required visitors during growth and reserves their space before subsequent foliage. See [source locators, before/after evidence and limits](../development/selected-visitors.md).
 
 The grown composition uses stems and a grid of free-space discs to place successively smaller motifs. Its proxies intentionally permit some overlap: this is not a strict non-overlap baseline. Species traits, seasonal appearance and rendering provide variation within a coherent composition. Separate random streams reduce interference between features. See [how it works](../../florilegium/docs/how-it-works.md).
 

@@ -160,3 +160,44 @@ test('blocked browser storage does not break editing or shared links', () => {
   expect(loadWatchGrowth()).toBe(true);
   expect(() => persistSettings(initialState, false)).not.toThrow();
 });
+
+test('editing after sharing preserves both densities on reload without adding history entries', () => {
+  const original = structuredClone(initialState);
+  original.page.density = .2;
+  original.shape.density = 60;
+  const location = { hash: serializeState(original) };
+  const stored = new Map<string, string>();
+  const replaceState = vi.fn((_state, _title, hash: string) => { location.hash = hash; });
+  vi.stubGlobal('window', { location, history: { state: null, replaceState }, localStorage: {
+    getItem: (key: string) => stored.get(key) ?? null,
+    setItem: (key: string, value: string) => stored.set(key, value),
+  } });
+  const edited = loadState();
+  edited.page.density = .65;
+  edited.shape.density = 230;
+  persistSettings(edited, false);
+  expect(loadState()).toEqual(edited);
+  expect(JSON.parse(stored.get(STORAGE_KEY)!).state).toEqual(edited);
+  expect(replaceState).toHaveBeenCalledExactlyOnceWith(null, '', serializeState(edited));
+  persistSettings(edited, true);
+  expect(replaceState).toHaveBeenCalledTimes(1);
+  // Opening the original link deliberately still imports the original settings.
+  location.hash = serializeState(original);
+  expect(loadState()).toEqual(original);
+  // Ordinary editing keeps clean URLs clean and uses the saved draft on reload.
+  location.hash = '';
+  persistSettings(edited, true);
+  expect(location.hash).toBe('');
+  expect(loadState()).toEqual(edited);
+});
+
+test('shared URL still retains density edits when local storage is unavailable', () => {
+  const location = { hash: serializeState(initialState) };
+  vi.stubGlobal('window', { location, history: { state: null,
+    replaceState: (_state: unknown, _title: string, hash: string) => { location.hash = hash; },
+  }, get localStorage() { throw new Error('Storage is blocked'); } });
+  const edited = structuredClone(initialState);
+  edited.page.density = .35;
+  persistSettings(edited, false);
+  expect(loadState().page.density).toBe(.35);
+});

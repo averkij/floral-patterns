@@ -1,8 +1,8 @@
 # GitHub Pages development direction
 
-**Decision recorded 2026-11-06:** build browser demos in this repository and deploy them with GitHub Pages. The React/Vite application and a build/deployment workflow now exist. Repository hosting settings and the remote deployment have not been verified by the local implementation task.
+**Decision recorded 2026-11-06:** build browser demos in this repository and deploy them with GitHub Pages. On 2026-11-07 the repository Pages API confirmed workflow-based hosting, and the public project URL returned HTTP 200. Build/deploy run [42349292664](https://github.com/averkij/floral-patterns/actions/runs/42349292664) succeeded for revision `8540f3dfa28205f0741df7fe7cf31d602148652f`. That initial live release predates the Flower Power changes; new releases must be checked after pushing their checkpoint.
 
-The repository remote is `https://github.com/averkij/floral-patterns.git`. Assuming the standard project-site configuration and no custom domain, plan for `https://averkij.github.io/floral-patterns/`; this is an expected future URL, not a verified live deployment.
+The repository remote is `https://github.com/averkij/floral-patterns.git`. The verified public project URL is [averkij.github.io/floral-patterns](https://averkij.github.io/floral-patterns/).
 
 ## Constraints to preserve
 
@@ -40,4 +40,4 @@ The implemented [workflow](../../.github/workflows/pages.yml) checks types, runs
 
 The sequence follows [GitHub's custom-workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) and [Vite's Pages deployment guide](https://vite.dev/guide/static-deploy), checked 2026-11-06. Actions are pinned to full commit SHAs: [checkout 7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1), [setup-node 7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0), [configure-pages 6.0.0](https://github.com/actions/configure-pages/releases/tag/v6.0.0), [upload-pages-artifact 5.0.0](https://github.com/actions/upload-pages-artifact/releases/tag/v5.0.0), and [deploy-pages 5.0.1](https://github.com/actions/deploy-pages/releases/tag/v5.0.1).
 
-The workflow is ready for a push, but this document does not claim a live deployment. Verify the final URL and a generation/export smoke check after the first successful remote run.
+After each push, check the workflow for the exact commit, then verify the public site's asset revision, generation/export and shared/local settings. A successful Actions run alone does not prove that the browser is serving the latest artifact.

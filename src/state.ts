@@ -183,4 +183,10 @@ export function persistSettings(state: StudioState, watchGrowth: boolean): void 
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state, watchGrowth }));
   } catch { /* Editing remains available when browser storage is blocked or full. */ }
+  // A shared URL is also a reload source. Keep it aligned with subsequent edits,
+  // otherwise the old link silently overwrites the freshly saved local draft.
+  if (window.location.hash.startsWith('#studio=')) {
+    const hash = serializeState(state);
+    if (window.location.hash !== hash) window.history.replaceState(window.history.state, '', hash);
+  }
 }

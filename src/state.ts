@@ -18,6 +18,7 @@ export type PageConfig = Palette & {
   text: string;
   textFont: TextFont;
   textSize: number;
+  textColor: string;
 };
 export type ShapeConfig = Palette & {
   seed: number;
@@ -56,6 +57,7 @@ export const initialState: StudioState = {
     text: '',
     textFont: 'serif',
     textSize: 14,
+    textColor: '#000000',
   },
   shape: {
     seed: 42,
@@ -108,6 +110,7 @@ export function sanitizeState(raw: unknown): StudioState {
     if (typeof page.text === 'string') p.text = normalizePageText(page.text);
     if (isTextFont(page.textFont)) p.textFont = page.textFont;
     if (TEXT_SIZES.some(size => size === page.textSize)) p.textSize = page.textSize;
+    p.textColor = color(page.textColor, p.textColor);
     if (['spring', 'summer', 'autumn'].includes(page.season)) p.season = page.season;
     for (const key of ['ink', 'accent', 'paper'] as const) p[key] = color(page[key], p[key]);
     if (Array.isArray(page.flowers)) {

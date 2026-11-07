@@ -32,6 +32,7 @@ export function validatePageSettings(settings: PageSettings): void {
   if (settings.text !== undefined && (typeof settings.text !== 'string' || [...settings.text].length > PAGE_TEXT_LIMIT)) throw new Error('Page text must contain at most 2000 characters.');
   if (settings.textFont !== undefined && !isTextFont(settings.textFont)) throw new Error('Choose a supported text font.');
   if (settings.textSize !== undefined && !TEXT_SIZES.some(size => size === settings.textSize)) throw new Error('Choose a supported text size.');
+  if (settings.textColor !== undefined && !/^#[0-9a-f]{6}$/i.test(settings.textColor)) throw new Error('Choose a valid text color.');
   if (settings.flowersMatchInk !== undefined && typeof settings.flowersMatchInk !== 'boolean') throw new Error('Choose a valid flower color mode.');
   if (!Number.isInteger(settings.seed) || settings.seed < 1 || settings.seed > 2147483646) throw new Error('Choose a whole seed from 1 to 2147483646.');
   for (const key of ['ink', 'accent', 'paper'] as const) {
@@ -114,7 +115,7 @@ ${fontCss}
 <rect width="${width}" height="${height}" fill="#${settings.paper.replace('#', '')}"/>
 <g transform="matrix(1 0 0 -1 0 ${height})" clip-path="url(#garden-reservation)" stroke-linecap="round" stroke-linejoin="round">
 ${raw.body}
-</g><g transform="scale(${scale})">${pageTextSvg(settings.text ?? '', r, settings.ink, settings.textSize, settings.textFont)}</g></svg>`;
+</g><g transform="scale(${scale})">${pageTextSvg(settings.text ?? '', r, settings.textColor ?? '#000000', settings.textSize, settings.textFont)}</g></svg>`;
   return {
     svg, ms, adapter: PAGE_ADAPTER, revision: FLORILEGIUM_REVISION,
     stats: { motifs: raw.stats.motifs, stems: raw.stats.stems, visitors: Object.values(raw.stats.visitors ?? {}) },

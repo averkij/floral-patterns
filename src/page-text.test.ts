@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { layoutPageText, normalizePageText, pageTextSvg, withoutPageText } from './page-text';
 import { initialState, sanitizeState, serializeState } from './state';
-import { composeContinuousPage } from './engines/page-adapter';
+import { composeContinuousPage, validatePageSettings } from './engines/page-adapter';
 import { TEXT_FONTS } from './text-fonts';
 import metrics from './font-metrics.json';
 
@@ -23,6 +23,21 @@ test('page text shares and exports as escaped plain text without changing the fl
   expect(written.svg.match(/<path[^>]+>/g)).toEqual(blank.svg.match(/<path[^>]+>/g));
   expect(withoutPageText(written.svg)).not.toContain('data-page-text="true"');
   expect(pageTextSvg('', settings.rect, settings.ink)).toBe('');
+});
+
+test('text color defaults to black for legacy settings and changes independently of the floral scene', () => {
+  const legacy = sanitizeState({ version: 1, page: { ink: '#123456', text: 'Привет' } });
+  expect(legacy.page.textColor).toBe('#000000');
+  expect(sanitizeState({ version: 1, page: { textColor: 'url(bad)' } }).page.textColor).toBe('#000000');
+  const settings = { version: 1 as const, ...legacy.page, textColor: undefined };
+  const raw = { body: '<path d="M0 0L10 10"/>', events: [], duration: 1, stats: { motifs: 1, stems: 1, cells: 1 } };
+  const black = composeContinuousPage(settings, raw, 0);
+  const colored = composeContinuousPage({ ...settings, textColor: '#87234a' }, raw, 0, true);
+  expect(black.svg).toMatch(/<g data-page-text="true"[^>]*fill="#000000"/);
+  expect(colored.svg).toMatch(/<g data-page-text="true"[^>]*fill="#87234a"/);
+  expect(colored.timeline?.svg).toBe(colored.svg);
+  expect(colored.svg.match(/<path[^>]+>/g)).toEqual(black.svg.match(/<path[^>]+>/g));
+  expect(() => validatePageSettings({ ...settings, textColor: 'url(bad)' })).toThrow('text color');
 });
 
 test('calligraphic fonts cover Russian, respect selected point sizes and survive settings sanitization', () => {

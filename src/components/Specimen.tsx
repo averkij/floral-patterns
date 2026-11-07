@@ -129,7 +129,7 @@ export function PageSpecimen({
           </svg>
         )}
         <svg className="page-text-layer" viewBox="0 0 210 297">
-          <g fill={settings.ink} fontFamily={font.family} fontSize={textLayout.fontSize} textAnchor="middle" aria-hidden="true"
+          <g fill={settings.textColor} fontFamily={font.family} fontSize={textLayout.fontSize} textAnchor="middle" aria-hidden="true"
             style={{ fontKerning: 'none', fontVariantLigatures: 'none', fontFeatureSettings: '"calt" 0' }}>
             {textLayout.lines.map((line, i) => <text key={i} x={textLayout.x} y={textLayout.y + i * textLayout.lineHeight}>{line}</text>)}
           </g>
@@ -137,7 +137,7 @@ export function PageSpecimen({
             <textarea id="page-text" className="page-text-input" aria-label="Текст на странице"
               title="Нажмите, чтобы ввести текст" placeholder="Введите текст" maxLength={PAGE_TEXT_LIMIT}
               value={settings.text} onChange={e => update({ text: normalizePageText(e.target.value) })}
-              style={{ color: settings.ink, backgroundColor: settings.paper, fontFamily: font.family,
+              style={{ color: settings.textColor, backgroundColor: settings.paper, fontFamily: font.family,
                 fontSize: `${settings.textSize * 25.4 / 72}px` }} />
           </foreignObject>
         </svg>

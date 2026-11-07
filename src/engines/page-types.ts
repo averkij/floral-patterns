@@ -42,6 +42,7 @@ export interface PageSettings {
   text?: string;
   textFont?: TextFont;
   textSize?: number;
+  textColor?: string;
 }
 
 export interface VisitorSummary {

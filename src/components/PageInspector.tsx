@@ -123,6 +123,10 @@ export default function PageInspector({
           <label>Размер, пт<select value={settings.textSize} onChange={e => update({ textSize: +e.target.value })}>
             {TEXT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}
           </select></label>
+          <label>Цвет<span className="color-well" style={{ backgroundColor: settings.textColor }}>
+            <input type="color" aria-label="Цвет текста" value={settings.textColor}
+              onChange={e => update({ textColor: e.target.value })} />
+          </span></label>
         </div>
         <button className="edit-page-text" onClick={() => document.getElementById('page-text')?.focus()}>Редактировать текст</button>
         <div className="dimension-grid">

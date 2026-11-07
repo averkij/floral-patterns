@@ -59,6 +59,10 @@ Run expensive work in a worker where needed. Tag requests so stale responses can
 
 Avoid claiming mathematical non-overlap from a visually pleasing example or a proxy check alone. Compare multiple fixed seeds and masks, including a rectangle, circle, crescent, narrow neck, letter counter and disconnected islands. Empty/tiny regions should terminate clearly.
 
+## Independent page text color
+
+The text area now has a color picker beside its font and size controls. Text defaults to black, including when importing older links or drafts, and stays independent of floral palette changes. The selected color persists in local storage and shared links and is applied to the editor, live preview, animation and SVG export without changing floral geometry. Typecheck/build and all 40 tests passed. Edge smoke checks of the built `/floral-patterns/` route verified default and custom colors, palette independence, local/shared reloads, SVG download, and desktop/320-pixel layouts without failed requests or page errors.
+
 ## Completion checkpoint for each demo
 
 Keep a short README with the experiment's question, source credits, controls, known limitations, reproducible presets and validation performed. Check desktop and narrow-screen layout, keyboard access to controls, download behavior, shared-state reload, and asset loading under the project URL. Preserve a few representative outputs for review, update these notes with findings, then commit the verified checkpoint.

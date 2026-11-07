@@ -134,6 +134,7 @@ test('local drafts restore both demos and animation; valid links take priority o
   draft.page.flowersMatchInk = true;
   draft.page.textFont = 'greatvibes';
   draft.page.textSize = 32;
+  draft.page.textColor = '#87234a';
   draft.shape.text = 'Ж';
   persistSettings(draft, true);
   expect(loadState()).toEqual(draft);

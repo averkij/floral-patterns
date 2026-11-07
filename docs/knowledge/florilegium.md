@@ -6,6 +6,8 @@ Reviewed local revision `9fbaf56d53e6525e02da05cd802ea7da82052099` on 2026-11-06
 
 ## Source findings
 
+Follow-up visitor review, 2026-11-07: pinned `florilegium-grow.lua` randomly enables visitors and disables several types below density 0.3; placement can subsequently reject them. An allowed type is therefore not an appearance guarantee. Our v4 adapter explicitly draws selected native visitors after plant generation, measured into outer page bands. See [source locators, implementation evidence and limitations](../development/selected-visitors.md).
+
 The grown composition uses stems and a grid of free-space discs to place successively smaller motifs. Its proxies intentionally permit some overlap: this is not a strict non-overlap baseline. Species traits, seasonal appearance and rendering provide variation within a coherent composition. Separate random streams reduce interference between features. See [how it works](../../florilegium/docs/how-it-works.md).
 
 The supported integration surface is the SVG command line or `require("florilegium-svg").page(options)`. The browser runs Lua 5.4 through Wasmoon in a worker. The upstream worker pins CDN JavaScript/WASM bytes and fetches the Lua modules relative to its location. The upstream Pages workflow copies both the web assets and Lua files into the deployment artifact. See [SVG and web documentation](../../florilegium/docs/svg-and-web.md).

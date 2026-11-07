@@ -40,6 +40,11 @@ await writeFile(
 for (const font of ['fell.woff2', 'fell-italic.woff2', 'OFL.txt', 'README.md']) {
   await copy(path.join(upstreamDir, 'web', 'fonts', font), `fonts/${font}`);
 }
+for (const directory of ['greatvibes', 'marckscript', 'badscript']) {
+  for (const file of await readdir(path.join(root, 'assets', 'fonts', directory))) {
+    await copy(path.join(root, 'assets', 'fonts', directory, file), `fonts/${directory}/${file}`);
+  }
+}
 
 let wasmoonRoot;
 try {

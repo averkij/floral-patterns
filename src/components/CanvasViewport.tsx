@@ -78,7 +78,7 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
         className="canvas-scrollport"
         ref={viewport}
         role="region"
-        aria-label={`${kind === 'page' ? 'Сад на странице А4' : 'Фигура'}: предпросмотр${fitting ? '' : `, масштаб ${zoom}%, доступна прокрутка`}`}
+        aria-label={`${kind === 'page' ? 'Цветочник А4' : 'Заполнение формы'}: предпросмотр${fitting ? '' : `, масштаб ${zoom}%, доступна прокрутка`}`}
         tabIndex={0}
       >
         <div className="canvas-scroll-content">
@@ -89,7 +89,7 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
               value={zoom === null ? 'fit' : String(zoom)}
               onChange={event => event.target.value === 'fit' ? fit() : changeZoom(Number(event.target.value))}
             >
-              <option value="fit">Вписать</option>
+              <option value="fit">{fitPercent}%</option>
               {ZOOM_LEVELS.map(level => <option value={level} key={level}>{level}%</option>)}
             </select>
             <button type="button" onClick={() => step(1)} disabled={effectiveZoom >= 200} aria-label="Увеличить" title="Увеличить">+</button>

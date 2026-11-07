@@ -79,7 +79,7 @@ export default function App() {
             setState((previous) => ({ ...previous, tab: 'page' }));
           }}
         >
-          Сад на странице
+          Цветочник
         </button>
         <button
           className={!page ? 'active' : ''}
@@ -90,13 +90,13 @@ export default function App() {
             setState((previous) => ({ ...previous, tab: 'shape' }));
           }}
         >
-          Форма и буква
+          Заполнение формы
         </button>
       </nav>
       <main className="studio-main">
         <section
           className={`workspace ${page ? 'page-workspace' : 'shape-workspace'}`}
-          aria-label={page ? 'Холст сада на странице' : 'Холст фигуры и буквы'}
+          aria-label={page ? 'Холст цветочника' : 'Холст заполнения формы'}
         >
           <CanvasViewport kind={page ? 'page' : 'shape'}>
             {page ? (

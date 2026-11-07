@@ -2,6 +2,8 @@ import { expect, test } from 'vitest';
 import { layoutPageText, normalizePageText, pageTextSvg, withoutPageText } from './page-text';
 import { initialState, sanitizeState, serializeState } from './state';
 import { composeContinuousPage } from './engines/page-adapter';
+import { TEXT_FONTS } from './text-fonts';
+import metrics from './font-metrics.json';
 
 test('page text shares and exports as escaped plain text without changing the floral scene', () => {
   const text = 'Для тебя & меня\n<svg onload="alert(1)">';
@@ -21,6 +23,26 @@ test('page text shares and exports as escaped plain text without changing the fl
   expect(written.svg.match(/<path[^>]+>/g)).toEqual(blank.svg.match(/<path[^>]+>/g));
   expect(withoutPageText(written.svg)).not.toContain('data-page-text="true"');
   expect(pageTextSvg('', settings.rect, settings.ink)).toBe('');
+});
+
+test('calligraphic fonts cover Russian, respect selected point sizes and survive settings sanitization', () => {
+  for (const font of TEXT_FONTS) {
+    const settings = sanitizeState({ version: 1, page: { textFont: font.id, textSize: 32 } });
+    expect(settings.page.textFont).toBe(font.id);
+    expect(settings.page.textSize).toBe(32);
+    const small = layoutPageText('Для тебя', initialState.page.rect, 14, font.id);
+    const large = layoutPageText('Для тебя', initialState.page.rect, 32, font.id);
+    expect(large.fontSize / small.fontSize).toBeCloseTo(32 / 14);
+    expect(pageTextSvg('Привет', initialState.page.rect, '#123456', 32, font.id)).toContain('font-family=');
+    if (font.id !== 'serif') {
+      for (const letter of 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя')
+        expect((metrics[font.id].widths as Record<string, number>)[letter.codePointAt(0)!]).toBeGreaterThan(0);
+    }
+  }
+  const invalid = sanitizeState({ version: 1, page: { textFont: 'unknown', textSize: -20, flowersMatchInk: 'yes' } });
+  expect(invalid.page.textFont).toBe('serif');
+  expect(invalid.page.textSize).toBe(14);
+  expect(invalid.page.flowersMatchInk).toBe(false);
 });
 
 test('text wraps words, breaks long words, preserves paragraphs and shrinks into small regions', () => {

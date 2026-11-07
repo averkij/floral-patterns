@@ -3,6 +3,7 @@ import { Check, ColorControls, Section, SeedControl, Slider } from './Controls';
 import { FLOWERS, defaultFlowerColors } from '../flowers';
 import FlowerGlyph from './FlowerGlyph';
 import VisitorGlyph from './VisitorGlyph';
+import { TEXT_FONTS, TEXT_SIZES, type TextFont } from '../text-fonts';
 
 const visitors: [Visitor, string][] = [
   ['butterfly', 'Бабочки'],
@@ -51,6 +52,7 @@ export default function PageInspector({
       <Section title="Цветы" action={
         <button className="text-button" onClick={() => update({ flowerColors: { ...defaultFlowerColors } })}>Сбросить цвета</button>
       }>
+        <div className="flower-color-mode"><Check label="Под цвет зелени" checked={settings.flowersMatchInk} onChange={flowersMatchInk => update({ flowersMatchInk })} /></div>
         <div className="flower-grid" role="group" aria-label="Виды цветов">
           {FLOWERS.map(flower => (
             <div className="flower-tile" key={flower.id}>
@@ -64,15 +66,16 @@ export default function PageInspector({
                   update({ flowers: FLOWERS.filter(f => f.id === flower.id
                     ? !settings.flowers.includes(f.id) : settings.flowers.includes(f.id)).map(f => f.id) });
                 }}>
-                <FlowerGlyph flower={flower.id} color={settings.flowerColors[flower.id]} />
+                <FlowerGlyph flower={flower.id} color={settings.flowersMatchInk ? settings.ink : settings.flowerColors[flower.id]} />
                 <span className="flower-name">{flower.label}</span>
                 {settings.flowers.includes(flower.id) && <span className="flower-selected" aria-hidden="true">✓</span>}
               </button>
-              <label className="color-well flower-color" title={`Цвет: ${flower.label}`} style={{ backgroundColor: settings.flowerColors[flower.id] }}>
+              <label className="color-well flower-color" title={`Цвет: ${flower.label}`} style={{ backgroundColor: settings.flowersMatchInk ? settings.ink : settings.flowerColors[flower.id] }}>
                 <input
                   type="color"
                   aria-label={`Цвет: ${flower.label}`}
-                  value={settings.flowerColors[flower.id]}
+                  value={settings.flowersMatchInk ? settings.ink : settings.flowerColors[flower.id]}
+                  disabled={settings.flowersMatchInk}
                   onChange={(event) => update({
                     flowerColors: { ...settings.flowerColors, [flower.id]: event.target.value },
                   })}
@@ -113,6 +116,14 @@ export default function PageInspector({
         </div>
       </Section>
       <Section title="Область текста">
+        <div className="text-settings">
+          <label>Шрифт<select value={settings.textFont} onChange={e => update({ textFont: e.target.value as TextFont })}>
+            {TEXT_FONTS.map(font => <option key={font.id} value={font.id}>{font.label}</option>)}
+          </select></label>
+          <label>Размер, пт<select value={settings.textSize} onChange={e => update({ textSize: +e.target.value })}>
+            {TEXT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}
+          </select></label>
+        </div>
         <button className="edit-page-text" onClick={() => document.getElementById('page-text')?.focus()}>Редактировать текст</button>
         <div className="dimension-grid">
           {(['width', 'height', 'x', 'y'] as const).map((key) => (

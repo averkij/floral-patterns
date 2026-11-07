@@ -8,7 +8,7 @@ export function flowersLua(settings: PageSettings): string {
   if (!settings.flowers) return 'local function restore_flowers() end';
   const selected = FLOWERS.filter(f => settings.flowers!.includes(f.id));
   const definitions = selected.map(f => {
-    const hex = (settings.flowerColors?.[f.id] ?? defaultFlowerColors[f.id]).replace('#', '');
+    const hex = (settings.flowersMatchInk ? settings.ink : settings.flowerColors?.[f.id] ?? defaultFlowerColors[f.id]).replace('#', '');
     const rgb = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
     return `{ id = "${f.id}", plan = "${f.plan}", rgb = {${rgb.join(',')}} }`;
   }).join(',\n');

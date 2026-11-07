@@ -16,6 +16,12 @@ A later hybrid could reserve a few large flowers, route a coherent vine skeleton
 
 ## Common experiment contract
 
+The latest 2026-11-07 controls use the tabs **Цветочник** and **Заполнение формы**. **Под цвет зелени** links bloom colors to main ink while retaining custom colors. Selected objects now appear on every generated page, with the v4 adapter and [documented placement limits](selected-visitors.md). Automatic fit remains the default, but the zoom selector displays its measured percentage instead of “Вписать”.
+
+Page text now has a point-size selector (10–64 pt) and Georgia plus three locally hosted Cyrillic Google Fonts: Great Vibes, Marck Script and Bad Script. Text size is the maximum requested size; overlong text still scales down to fit its reservation. Wrapping uses checked-in font metrics for the three bundled fonts, with kerning/ligatures disabled consistently in preview and export. The chosen font and its OFL license are embedded in SVG exports; no Google CDN request occurs during use. Existing local/shared states default to Georgia and 14 pt. [Font provenance and metric regeneration](../../assets/fonts/README.md) record the pinned sources and glyph coverage checks.
+
+Typecheck/build and 37 tests passed. The built project-subpath browser check verified live font/size changes, all three Cyrillic fonts, linked color changes and restoration, persisted/shared settings with identical regenerated SVG, complete visitor selection, animation, actual zoom percentages, mobile controls and the second demo's generation/export. An exported Great Vibes SVG was opened in a fresh browser context with HTTP requests blocked and its embedded font loaded successfully. Screenshots of all three text styles, mobile controls and the standalone export were reviewed. Embedded-font rendering in third-party SVG editors has not been verified.
+
 Each demo should save an algorithm/version identifier, seed, dimensions, parameters and any relevant upstream revision. A shared link must reconstruct those inputs. Keep named presets as data, so they can become comparison fixtures.
 
 The current interface separates editing from generation: initial load, seed/settings changes, rectangle manipulation and freehand drawing prepare a draft. **Grow pattern** explicitly applies it, with a busy spinner during computation/playback. The canvas offers Fit and 25–200% preview zoom; scrolling and zoom do not change export dimensions. Include this draft/apply behavior in interaction checks so dragging cannot silently regenerate a specimen.

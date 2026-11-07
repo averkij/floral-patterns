@@ -146,3 +146,42 @@ test('all eight flower choices generate distinct blooms, recolor without moving 
   const first = await generate(mixed);
   expect((await generate(mixed)).body).toBe(first.body);
 }, 120_000);
+
+test('selected visitors are guaranteed at all densities and seasons without changing plants', async () => {
+  const visitors = ['butterfly', 'bee', 'bird', 'snail'] as const;
+  const cases: PageSettings[] = [
+    { ...settings, seed: 1, density: .2, season: 'spring', rect: { x: 18, y: 18, width: 174, height: 261 } },
+    { ...settings, seed: 42, density: 1, season: 'summer' },
+    { ...settings, seed: 2147483646, density: .2, season: 'autumn', rect: { x: 152, y: 239, width: 40, height: 40 } },
+  ];
+  for (const input of cases) {
+    const all = await generate({ ...input, visitors: [...visitors] });
+    expect([...all.body.matchAll(/data-visitor="([^"]+)"/g)].map(m => m[1])).toEqual(visitors);
+    expect(Object.values(all.stats.visitors ?? {}).map(v => v.group)).toEqual(['lepidoptera', 'bee', 'bird', 'snail']);
+    expect(all.body).not.toMatch(/NaN|Infinity/);
+    const none = await generate({ ...input, visitors: [] });
+    expect(none.body).not.toContain('data-visitor=');
+    expect(all.body.slice(0, all.body.indexOf('<g data-growth-event="visitor-'))).toBe(none.body);
+    const reversed = await generate({ ...input, visitors: [...visitors].reverse() });
+    expect(reversed.body).toBe(all.body);
+    expect(reversed.events).toEqual(all.events);
+  }
+  for (const visitor of visitors) {
+    const raw = await generate({ ...settings, density: .2, visitors: [visitor] });
+    expect([...raw.body.matchAll(/data-visitor="([^"]+)"/g)].map(m => m[1])).toEqual([visitor]);
+    expect(Object.values(raw.events).filter(e => e.id.startsWith('visitor-'))).toHaveLength(1);
+  }
+}, 120_000);
+
+test('matching flowers to the main ink is paint-only and ignores stored custom bloom colors', async () => {
+  const input: PageSettings = { ...settings, density: .2, flowers: ['rose', 'tulip', 'aster'],
+    flowerColors: defaultFlowerColors, flowersMatchInk: true };
+  const linked = await generate(input);
+  const explicit = await generate({ ...input, flowersMatchInk: false,
+    flowerColors: Object.fromEntries(FLOWERS.map(f => [f.id, input.ink])) as typeof defaultFlowerColors });
+  expect(linked.body).toBe(explicit.body);
+  const independent = await generate({ ...input, flowersMatchInk: false });
+  const paths = (body: string) => [...body.matchAll(/\bd="([^"]+)"/g)].map(m => m[1]);
+  expect(paths(independent.body)).toEqual(paths(linked.body));
+  expect(independent.events).toEqual(linked.events);
+}, 60_000);

@@ -131,6 +131,9 @@ test('local drafts restore both demos and animation; valid links take priority o
   draft.page.text = 'Для тебя!\nС любовью 🌷';
   draft.page.visitors = [];
   draft.page.flowerColors.rose = '#112233';
+  draft.page.flowersMatchInk = true;
+  draft.page.textFont = 'greatvibes';
+  draft.page.textSize = 32;
   draft.shape.text = 'Ж';
   persistSettings(draft, true);
   expect(loadState()).toEqual(draft);

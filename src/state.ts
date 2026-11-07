@@ -1,5 +1,6 @@
 import { FLOWERS, defaultFlowerColors, isFlower, type Flower, type FlowerColors } from './flowers';
 import { normalizePageText } from './page-text';
+import { isTextFont, TEXT_SIZES, type TextFont } from './text-fonts';
 
 export type Palette = { ink: string; accent: string; paper: string };
 export type Rect = { x: number; y: number; width: number; height: number };
@@ -12,8 +13,11 @@ export type PageConfig = Palette & {
   visitors: Visitor[];
   flowers: Flower[];
   flowerColors: FlowerColors;
+  flowersMatchInk: boolean;
   showFrame: boolean;
   text: string;
+  textFont: TextFont;
+  textSize: number;
 };
 export type ShapeConfig = Palette & {
   seed: number;
@@ -47,8 +51,11 @@ export const initialState: StudioState = {
     visitors: ['butterfly', 'bee', 'bird', 'snail'],
     flowers: FLOWERS.map(f => f.id),
     flowerColors: { ...defaultFlowerColors },
+    flowersMatchInk: false,
     showFrame: true,
     text: '',
+    textFont: 'serif',
+    textSize: 14,
   },
   shape: {
     seed: 42,
@@ -99,6 +106,8 @@ export function sanitizeState(raw: unknown): StudioState {
     p.seed = Math.floor(number(page.seed, 42, 1, 2147483646));
     p.density = number(page.density, p.density, 0.2, 1);
     if (typeof page.text === 'string') p.text = normalizePageText(page.text);
+    if (isTextFont(page.textFont)) p.textFont = page.textFont;
+    if (TEXT_SIZES.some(size => size === page.textSize)) p.textSize = page.textSize;
     if (['spring', 'summer', 'autumn'].includes(page.season)) p.season = page.season;
     for (const key of ['ink', 'accent', 'paper'] as const) p[key] = color(page[key], p[key]);
     if (Array.isArray(page.flowers)) {
@@ -108,6 +117,7 @@ export function sanitizeState(raw: unknown): StudioState {
     if (page.flowerColors && typeof page.flowerColors === 'object') {
       for (const f of FLOWERS) p.flowerColors[f.id] = color(page.flowerColors[f.id], f.color);
     }
+    if (typeof page.flowersMatchInk === 'boolean') p.flowersMatchInk = page.flowersMatchInk;
     if (Array.isArray(page.visitors))
       p.visitors = [
         ...new Set(page.visitors.filter((v) => ['butterfly', 'bee', 'bird', 'snail'].includes(v))),

@@ -68,6 +68,7 @@ test('new generation terminates obsolete work and ignores stale results, with su
   expect(active.requests[0].runtime).toEqual({
     wasm: 'https://example.test/floral-patterns/vendor/wasmoon/glue.wasm',
     lua: 'https://example.test/floral-patterns/vendor/florilegium/',
+    fonts: 'https://example.test/floral-patterns/fonts/',
   });
   engine.dispose();
   expect(active.terminated).toBe(true);

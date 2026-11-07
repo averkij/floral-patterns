@@ -4,6 +4,7 @@ import { composeContinuousPage, continuousPageLua, LUA_MODULES, validatePageSett
 import type { ContinuousResult } from './page-adapter';
 import { adaptGrowSource } from './page-lua';
 import type { PageRequest, PageResponse } from './page-types';
+import { embeddedTextFont } from '../text-fonts';
 
 const scope = self as unknown as {
   onmessage: ((event: MessageEvent<PageRequest>) => void) | null;
@@ -33,12 +34,14 @@ scope.onmessage = async ({ data }) => {
     validatePageSettings(settings);
     scope.postMessage({ id, progress: { stage: 'loading', completed: 0, total: 1, label: 'Loading the botanical engine' } });
     engine ??= loadEngine(runtime);
-    lua = await engine;
+    const [loaded, fontCss] = await Promise.all([engine, settings.text?.trim() && settings.textFont && runtime.fonts
+      ? embeddedTextFont(settings.textFont, runtime.fonts) : Promise.resolve('')]);
+    lua = loaded;
     scope.postMessage({ id, progress: { stage: 'growing', completed: 0, total: 1, label: 'Composing one continuous garden' } });
     const started = performance.now();
     const raw = await lua.doString(continuousPageLua(settings)) as ContinuousResult;
     lua.global.setTop(0);
-    scope.postMessage({ id, result: composeContinuousPage(settings, raw, performance.now() - started, animate) });
+    scope.postMessage({ id, result: composeContinuousPage(settings, raw, performance.now() - started, animate, fontCss) });
   } catch (error) {
     scope.postMessage({ id, error: error instanceof Error ? error.message : String(error) });
   } finally {

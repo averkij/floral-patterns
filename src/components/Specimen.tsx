@@ -3,7 +3,8 @@ import { clamp, constrainRect, type PageConfig, type Rect, type ShapeConfig } fr
 import type { PageTimeline } from '../engines/page-engine';
 import { useSvgUrl } from '../useSvgUrl';
 import PageGrowthPreview from './PageGrowthPreview';
-import { layoutPageText, normalizePageText, PAGE_TEXT_FONT, PAGE_TEXT_LIMIT, withoutPageText } from '../page-text';
+import { layoutPageText, normalizePageText, PAGE_TEXT_LIMIT, withoutPageText } from '../page-text';
+import { textFont } from '../text-fonts';
 export function PageSpecimen({
   settings,
   svg,
@@ -25,7 +26,8 @@ export function PageSpecimen({
     surface = useRef<SVGSVGElement>(null);
   const drag = useRef<{ startX: number; startY: number; rect: Rect; handle: string } | null>(null);
   const { rect } = settings;
-  const textLayout = layoutPageText(settings.text, rect);
+  const textLayout = layoutPageText(settings.text, rect, settings.textSize, settings.textFont);
+  const font = textFont(settings.textFont);
   const begin = (event: PointerEvent<SVGElement>, handle: string) => {
     event.preventDefault();
     event.stopPropagation();
@@ -127,14 +129,16 @@ export function PageSpecimen({
           </svg>
         )}
         <svg className="page-text-layer" viewBox="0 0 210 297">
-          <g fill={settings.ink} fontFamily={PAGE_TEXT_FONT} fontSize={textLayout.fontSize} textAnchor="middle" aria-hidden="true">
+          <g fill={settings.ink} fontFamily={font.family} fontSize={textLayout.fontSize} textAnchor="middle" aria-hidden="true"
+            style={{ fontKerning: 'none', fontVariantLigatures: 'none', fontFeatureSettings: '"calt" 0' }}>
             {textLayout.lines.map((line, i) => <text key={i} x={textLayout.x} y={textLayout.y + i * textLayout.lineHeight}>{line}</text>)}
           </g>
           <foreignObject x={rect.x + 4} y={rect.y + 4} width={rect.width - 8} height={rect.height - 8}>
             <textarea id="page-text" className="page-text-input" aria-label="Текст на странице"
               title="Нажмите, чтобы ввести текст" placeholder="Введите текст" maxLength={PAGE_TEXT_LIMIT}
               value={settings.text} onChange={e => update({ text: normalizePageText(e.target.value) })}
-              style={{ color: settings.ink, backgroundColor: settings.paper, fontFamily: PAGE_TEXT_FONT }} />
+              style={{ color: settings.ink, backgroundColor: settings.paper, fontFamily: font.family,
+                fontSize: `${settings.textSize * 25.4 / 72}px` }} />
           </foreignObject>
         </svg>
       </div>

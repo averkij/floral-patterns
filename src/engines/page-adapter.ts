@@ -3,8 +3,10 @@ import type { PageGrowthEvent, PageResult, PageSettings, PageVisitor, VisitorSum
 import { COMPACT_TIMELINE_LUA } from './page-lua';
 import { continuousDomainLua } from './page-domain';
 import { flowersLua } from './page-flowers';
+import { visitorsLua } from './page-visitors';
 import { FLOWERS, isFlower } from '../flowers';
 import { pageTextSvg, PAGE_TEXT_LIMIT } from '../page-text';
+import { isTextFont, TEXT_SIZES } from '../text-fonts';
 
 export const LUA_MODULES = [
   'florilegium', 'florilegium-ink', 'florilegium-flora', 'florilegium-grow',
@@ -28,6 +30,9 @@ export interface ContinuousResult {
 export function validatePageSettings(settings: PageSettings): void {
   if (settings.version !== 1) throw new Error('This page configuration uses an unsupported version.');
   if (settings.text !== undefined && (typeof settings.text !== 'string' || [...settings.text].length > PAGE_TEXT_LIMIT)) throw new Error('Page text must contain at most 2000 characters.');
+  if (settings.textFont !== undefined && !isTextFont(settings.textFont)) throw new Error('Choose a supported text font.');
+  if (settings.textSize !== undefined && !TEXT_SIZES.some(size => size === settings.textSize)) throw new Error('Choose a supported text size.');
+  if (settings.flowersMatchInk !== undefined && typeof settings.flowersMatchInk !== 'boolean') throw new Error('Choose a valid flower color mode.');
   if (!Number.isInteger(settings.seed) || settings.seed < 1 || settings.seed > 2147483646) throw new Error('Choose a whole seed from 1 to 2147483646.');
   for (const key of ['ink', 'accent', 'paper'] as const) {
     if (!/^#?[0-9a-f]{6}$/i.test(settings[key])) throw new Error(`The ${key} color must have six hexadecimal digits.`);
@@ -45,7 +50,6 @@ export function validatePageSettings(settings: PageSettings): void {
 
 /** One community, one free-space field, one event schedule on the real A4 page. */
 export function continuousPageLua(settings: PageSettings): string {
-  const allowed = settings.visitors.map(visitor => `${VISITOR_GROUPS[visitor]} = true`).join(', ');
   const r = settings.rect;
   return `
     local grow = require("florilegium-grow")
@@ -53,19 +57,21 @@ export function continuousPageLua(settings: PageSettings): string {
     local native = require("florilegium-native")
     local species = require("florilegium-species")
     local original_page, original_draw = grow.page, native.draw
-    local allowed = { ${allowed} }
     local recording
+    local visitor_body, visitor_events
     ${continuousDomainLua(settings)}
     ${COMPACT_TIMELINE_LUA}
     native.draw = function(kind, plant, seed, options)
-      if kind == "visitor" and not allowed[species.vsample(options.seed, options.role).group] then return true end
+      if kind == "visitor" then return true end
       return original_draw(kind, plant, seed, options)
     end
     ${flowersLua(settings)}
+    ${visitorsLua(settings)}
     grow.page = function(g)
       configure(g)
       g.anim, g.compact = true, true
       recording = original_page(g)
+      visitor_body, visitor_events = append_visitors(recording)
       return { stats = recording.stats }
     end
     local ok, result = pcall(function()
@@ -77,12 +83,8 @@ export function continuousPageLua(settings: PageSettings): string {
         density = ${settings.density}, season = "${settings.season}", visitors = true, id = "garden-"
       })
       local body, events = compact_svg(recording)
-      local visitors = {}
-      for _, visitor in ipairs(recording.stats.visitors or {}) do
-        if allowed[visitor.group] then visitors[#visitors + 1] = visitor end
-      end
-      recording.stats.visitors = visitors
-      return { body = body, events = events, duration = recording.total, stats = recording.stats }
+      for _, event in ipairs(visitor_events) do events[#events+1] = event end
+      return { body = body .. visitor_body, events = events, duration = recording.total, stats = recording.stats }
     end)
     restore_flowers()
     grow.page, native.draw = original_page, original_draw
@@ -96,7 +98,7 @@ function escapeXml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[character]!);
 }
 
-export function composeContinuousPage(settings: PageSettings, raw: ContinuousResult, ms: number, animate = false): PageResult {
+export function composeContinuousPage(settings: PageSettings, raw: ContinuousResult, ms: number, animate = false, fontCss = ''): PageResult {
   const scale = 72 / 25.4, width = 210 * scale, height = 297 * scale;
   const r = settings.rect;
   const left = r.x * scale, right = (r.x + r.width) * scale;
@@ -107,11 +109,12 @@ export function composeContinuousPage(settings: PageSettings, raw: ContinuousRes
 <title>Florilegium — сад на странице А4, вариант ${settings.seed}</title>
 <desc>Цветочный сад вокруг области текста. Florilegium: Kevin Raymond, лицензия MIT; адаптация области роста и анимации: Flower Power.</desc>
 <metadata>${metadata}</metadata>
+${fontCss}
 <defs><clipPath id="garden-reservation" clipPathUnits="userSpaceOnUse"><path d="${clip}" clip-rule="evenodd" fill-rule="evenodd"/></clipPath></defs>
 <rect width="${width}" height="${height}" fill="#${settings.paper.replace('#', '')}"/>
 <g transform="matrix(1 0 0 -1 0 ${height})" clip-path="url(#garden-reservation)" stroke-linecap="round" stroke-linejoin="round">
 ${raw.body}
-</g><g transform="scale(${scale})">${pageTextSvg(settings.text ?? '', r, settings.ink)}</g></svg>`;
+</g><g transform="scale(${scale})">${pageTextSvg(settings.text ?? '', r, settings.ink, settings.textSize, settings.textFont)}</g></svg>`;
   return {
     svg, ms, adapter: PAGE_ADAPTER, revision: FLORILEGIUM_REVISION,
     stats: { motifs: raw.stats.motifs, stems: raw.stats.stems, visitors: Object.values(raw.stats.visitors ?? {}) },

@@ -96,6 +96,7 @@ export function createPageEngine(): PageEngine {
           runtime: {
             wasm: new URL('vendor/wasmoon/glue.wasm', base).href,
             lua: new URL('vendor/florilegium/', base).href,
+            fonts: new URL('fonts/', base).href,
           },
         };
         currentWorker.postMessage(request);

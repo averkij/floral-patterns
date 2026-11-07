@@ -57,7 +57,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
     };
     const presentPage = (result: PageResult) => {
       if (!active) return;
-      const generated = { svg: result.svg, outline: '', detail: 'Сад на странице А4 · Florilegium', key };
+      const generated = { svg: result.svg, outline: '', detail: 'Цветочник А4 · Florilegium', key };
       setOutputs(previous => ({ ...previous, page: generated }));
       if (request.animate && result.timeline) {
         setPlayback({ timeline: result.timeline, request });

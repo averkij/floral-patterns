@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { constrainRect, initialState, loadState, sanitizeState, serializeState } from './state';
+import { constrainRect, initialState, loadState, loadWatchGrowth, persistSettings, sanitizeState, serializeState, STORAGE_KEY } from './state';
 import { validatePageSettings } from './engines/page-adapter';
 import { defaultFlowerColors } from './flowers';
 
@@ -115,4 +115,45 @@ test('legacy links gain flower defaults; untrusted selections and colors are san
   expect(sanitizeState({ version: 1, page: { flowers: [] } }).page.flowers).toEqual(initialState.page.flowers);
   restored.page.flowerColors.tulip = '#000000';
   expect(initialState.page.flowerColors.tulip).toBe(defaultFlowerColors.tulip);
+});
+
+test('local drafts restore both demos and animation; valid links take priority over cached drafts', () => {
+  const stored = new Map<string, string>();
+  const location = { hash: '' };
+  vi.stubGlobal('window', { location, localStorage: {
+    getItem: (key: string) => stored.get(key) ?? null,
+    setItem: (key: string, value: string) => stored.set(key, value),
+  }, matchMedia: () => ({ matches: true }) });
+  expect(loadState().page.density).toBe(.8);
+  expect(loadWatchGrowth()).toBe(false);
+  const draft = structuredClone(initialState);
+  draft.tab = 'shape';
+  draft.page.text = 'Для тебя!\nС любовью 🌷';
+  draft.page.visitors = [];
+  draft.page.flowerColors.rose = '#112233';
+  draft.shape.text = 'Ж';
+  persistSettings(draft, true);
+  expect(loadState()).toEqual(draft);
+  expect(loadWatchGrowth()).toBe(true);
+  location.hash = serializeState({ ...draft, tab: 'page', page: { ...draft.page, seed: 79 } });
+  expect(loadState().page.seed).toBe(79);
+  location.hash = '#studio=broken';
+  expect(loadState()).toEqual(draft);
+  stored.set(STORAGE_KEY, JSON.stringify({ version: 1, state: { version: 1, page: { density: 99, ink: 'red' } } }));
+  expect(loadState().page.density).toBe(1);
+  expect(loadState().page.ink).toBe(initialState.page.ink);
+  stored.set(STORAGE_KEY, '{broken');
+  expect(loadState()).toEqual(initialState);
+  stored.set(STORAGE_KEY, JSON.stringify({ version: 2, state: draft }));
+  expect(loadState()).toEqual(initialState);
+});
+
+test('blocked browser storage does not break editing or shared links', () => {
+  vi.stubGlobal('window', { location: { hash: serializeState(initialState) },
+    get localStorage() { throw new Error('Storage is blocked'); },
+    matchMedia: () => ({ matches: false }),
+  });
+  expect(loadState()).toEqual(initialState);
+  expect(loadWatchGrowth()).toBe(true);
+  expect(() => persistSettings(initialState, false)).not.toThrow();
 });

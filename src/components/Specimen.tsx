@@ -3,6 +3,7 @@ import { clamp, constrainRect, type PageConfig, type Rect, type ShapeConfig } fr
 import type { PageTimeline } from '../engines/page-engine';
 import { useSvgUrl } from '../useSvgUrl';
 import PageGrowthPreview from './PageGrowthPreview';
+import { layoutPageText, normalizePageText, PAGE_TEXT_FONT, PAGE_TEXT_LIMIT, withoutPageText } from '../page-text';
 export function PageSpecimen({
   settings,
   svg,
@@ -20,10 +21,11 @@ export function PageSpecimen({
   onPlaybackComplete: () => void;
   onPlaybackProgress: (percent: number) => void;
 }) {
-  const url = useSvgUrl(svg),
+  const url = useSvgUrl(withoutPageText(svg)),
     surface = useRef<SVGSVGElement>(null);
   const drag = useRef<{ startX: number; startY: number; rect: Rect; handle: string } | null>(null);
   const { rect } = settings;
+  const textLayout = layoutPageText(settings.text, rect);
   const begin = (event: PointerEvent<SVGElement>, handle: string) => {
     event.preventDefault();
     event.stopPropagation();
@@ -90,7 +92,7 @@ export function PageSpecimen({
               onPointerDown={(e) => begin(e, 'move')}
               tabIndex={0}
               role="button"
-              aria-label="Переместить свободную область. Используйте стрелки или поля размеров."
+              aria-label="Переместить область текста. Используйте стрелки или поля размеров."
               onKeyDown={(e) => {
                 const delta: Record<string, [number, number]> = {
                   ArrowLeft: [-1, 0],
@@ -124,6 +126,17 @@ export function PageSpecimen({
             ))}
           </svg>
         )}
+        <svg className="page-text-layer" viewBox="0 0 210 297">
+          <g fill={settings.ink} fontFamily={PAGE_TEXT_FONT} fontSize={textLayout.fontSize} textAnchor="middle" aria-hidden="true">
+            {textLayout.lines.map((line, i) => <text key={i} x={textLayout.x} y={textLayout.y + i * textLayout.lineHeight}>{line}</text>)}
+          </g>
+          <foreignObject x={rect.x + 4} y={rect.y + 4} width={rect.width - 8} height={rect.height - 8}>
+            <textarea id="page-text" className="page-text-input" aria-label="Текст на странице"
+              title="Нажмите, чтобы ввести текст" placeholder="Введите текст" maxLength={PAGE_TEXT_LIMIT}
+              value={settings.text} onChange={e => update({ text: normalizePageText(e.target.value) })}
+              style={{ color: settings.ink, backgroundColor: settings.paper, fontFamily: PAGE_TEXT_FONT }} />
+          </foreignObject>
+        </svg>
       </div>
     </div>
   );

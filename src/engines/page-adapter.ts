@@ -4,6 +4,7 @@ import { COMPACT_TIMELINE_LUA } from './page-lua';
 import { continuousDomainLua } from './page-domain';
 import { flowersLua } from './page-flowers';
 import { FLOWERS, isFlower } from '../flowers';
+import { pageTextSvg, PAGE_TEXT_LIMIT } from '../page-text';
 
 export const LUA_MODULES = [
   'florilegium', 'florilegium-ink', 'florilegium-flora', 'florilegium-grow',
@@ -26,6 +27,7 @@ export interface ContinuousResult {
 
 export function validatePageSettings(settings: PageSettings): void {
   if (settings.version !== 1) throw new Error('This page configuration uses an unsupported version.');
+  if (settings.text !== undefined && (typeof settings.text !== 'string' || [...settings.text].length > PAGE_TEXT_LIMIT)) throw new Error('Page text must contain at most 2000 characters.');
   if (!Number.isInteger(settings.seed) || settings.seed < 1 || settings.seed > 2147483646) throw new Error('Choose a whole seed from 1 to 2147483646.');
   for (const key of ['ink', 'accent', 'paper'] as const) {
     if (!/^#?[0-9a-f]{6}$/i.test(settings[key])) throw new Error(`The ${key} color must have six hexadecimal digits.`);
@@ -103,13 +105,13 @@ export function composeContinuousPage(settings: PageSettings, raw: ContinuousRes
   const metadata = escapeXml(JSON.stringify({ adapter: PAGE_ADAPTER, revision: FLORILEGIUM_REVISION, settings }));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 ${width} ${height}">
 <title>Florilegium — сад на странице А4, вариант ${settings.seed}</title>
-<desc>Цветочный сад вокруг свободной области. Florilegium: Kevin Raymond, лицензия MIT; адаптация области роста и анимации: Алгоритмические цветочные узоры.</desc>
+<desc>Цветочный сад вокруг области текста. Florilegium: Kevin Raymond, лицензия MIT; адаптация области роста и анимации: Flower Power.</desc>
 <metadata>${metadata}</metadata>
 <defs><clipPath id="garden-reservation" clipPathUnits="userSpaceOnUse"><path d="${clip}" clip-rule="evenodd" fill-rule="evenodd"/></clipPath></defs>
 <rect width="${width}" height="${height}" fill="#${settings.paper.replace('#', '')}"/>
 <g transform="matrix(1 0 0 -1 0 ${height})" clip-path="url(#garden-reservation)" stroke-linecap="round" stroke-linejoin="round">
 ${raw.body}
-</g></svg>`;
+</g><g transform="scale(${scale})">${pageTextSvg(settings.text ?? '', r, settings.ink)}</g></svg>`;
   return {
     svg, ms, adapter: PAGE_ADAPTER, revision: FLORILEGIUM_REVISION,
     stats: { motifs: raw.stats.motifs, stems: raw.stats.stems, visitors: Object.values(raw.stats.visitors ?? {}) },

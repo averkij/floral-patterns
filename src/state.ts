@@ -1,4 +1,5 @@
 import { FLOWERS, defaultFlowerColors, isFlower, type Flower, type FlowerColors } from './flowers';
+import { normalizePageText } from './page-text';
 
 export type Palette = { ink: string; accent: string; paper: string };
 export type Rect = { x: number; y: number; width: number; height: number };
@@ -12,6 +13,7 @@ export type PageConfig = Palette & {
   flowers: Flower[];
   flowerColors: FlowerColors;
   showFrame: boolean;
+  text: string;
 };
 export type ShapeConfig = Palette & {
   seed: number;
@@ -36,7 +38,7 @@ export const initialState: StudioState = {
   tab: 'page',
   page: {
     seed: 42,
-    density: 1,
+    density: 0.8,
     season: 'summer',
     rect: { x: 56, y: 52, width: 108, height: 189 },
     ink: '#34486a',
@@ -46,6 +48,7 @@ export const initialState: StudioState = {
     flowers: FLOWERS.map(f => f.id),
     flowerColors: { ...defaultFlowerColors },
     showFrame: true,
+    text: '',
   },
   shape: {
     seed: 42,
@@ -94,7 +97,8 @@ export function sanitizeState(raw: unknown): StudioState {
   if (page && typeof page === 'object') {
     const p = fallback.page;
     p.seed = Math.floor(number(page.seed, 42, 1, 2147483646));
-    p.density = number(page.density, 1, 0.2, 1);
+    p.density = number(page.density, p.density, 0.2, 1);
+    if (typeof page.text === 'string') p.text = normalizePageText(page.text);
     if (['spring', 'summer', 'autumn'].includes(page.season)) p.season = page.season;
     for (const key of ['ink', 'accent', 'paper'] as const) p[key] = color(page[key], p[key]);
     if (Array.isArray(page.flowers)) {
@@ -146,10 +150,27 @@ export function serializeState(state: StudioState): string {
 }
 export function loadState(): StudioState {
   try {
-    return sanitizeState(
-      JSON.parse(decodeURIComponent(window.location.hash.replace(/^#studio=/, ''))),
-    );
-  } catch {
-    return structuredClone(initialState);
-  }
+    if (window.location.hash.startsWith('#studio=')) {
+      const shared = JSON.parse(decodeURIComponent(window.location.hash.slice(8)));
+      if (shared?.version === 1) return sanitizeState(shared);
+    }
+  } catch { /* A broken link must not discard the local draft. */ }
+  return sanitizeState(readPreferences()?.state);
+}
+
+export const STORAGE_KEY = 'flower-power:preferences:v1';
+function readPreferences(): { state?: unknown; watchGrowth?: unknown } | null {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? 'null');
+    return saved?.version === 1 ? saved : null;
+  } catch { return null; }
+}
+export function loadWatchGrowth(): boolean {
+  const saved = readPreferences()?.watchGrowth;
+  return typeof saved === 'boolean' ? saved : !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+export function persistSettings(state: StudioState, watchGrowth: boolean): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state, watchGrowth }));
+  } catch { /* Editing remains available when browser storage is blocked or full. */ }
 }

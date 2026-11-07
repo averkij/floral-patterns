@@ -4,16 +4,14 @@ import PageInspector from './components/PageInspector';
 import ShapeInspector from './components/ShapeInspector';
 import { PageSpecimen, ShapeSpecimen } from './components/Specimen';
 import CanvasViewport from './components/CanvasViewport';
-import { loadState, serializeState, type PageConfig, type ShapeConfig } from './state';
+import { loadState, loadWatchGrowth, persistSettings, serializeState, type PageConfig, type ShapeConfig } from './state';
 import { useGeneration } from './useGeneration';
 
 export default function App() {
   const [state, setState] = useState(loadState),
     [drawing, setDrawing] = useState(false),
     [dragging, setDragging] = useState(false),
-    [watchGrowth, setWatchGrowth] = useState(
-      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    ),
+    [watchGrowth, setWatchGrowth] = useState(loadWatchGrowth),
     [shareLabel, setShareLabel] = useState('Ссылка');
   const { output, timeline, finishPlayback, playbackProgress, busy, status, error, current, generate, replay } = useGeneration(
     state,
@@ -27,6 +25,7 @@ export default function App() {
     if (patch.kind && patch.kind !== 'custom') setDrawing(false);
     setState((previous) => ({ ...previous, shape: { ...previous.shape, ...patch } }));
   };
+  useEffect(() => persistSettings(state, watchGrowth), [state, watchGrowth]);
   useEffect(() => {
     const listener = () => {
       setState(loadState());
@@ -68,7 +67,7 @@ export default function App() {
   return (
     <div className="studio-shell">
       <header className="masthead">
-        <h1 className="wordmark">Алгоритмические цветочные узоры</h1>
+        <h1 className="wordmark">Flower Power</h1>
       </header>
       <nav className="workspace-tabs" aria-label="Эксперименты">
         <button

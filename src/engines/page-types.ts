@@ -36,6 +36,8 @@ export interface PageSettings {
   /** Omitted only for legacy callers using the original sampled community. */
   flowers?: Flower[];
   flowerColors?: FlowerColors;
+  /** Plain text in the reserved rectangle; omitted in older shared settings. */
+  text?: string;
 }
 
 export interface VisitorSummary {

@@ -1,0 +1,40 @@
+import { expect, test } from 'vitest';
+import { layoutPageText, normalizePageText, pageTextSvg, withoutPageText } from './page-text';
+import { initialState, sanitizeState, serializeState } from './state';
+import { composeContinuousPage } from './engines/page-adapter';
+
+test('page text shares and exports as escaped plain text without changing the floral scene', () => {
+  const text = 'Для тебя & меня\n<svg onload="alert(1)">';
+  const state = sanitizeState({ version: 1, page: { text } });
+  expect(JSON.parse(decodeURIComponent(serializeState(state).slice(8))).page.text).toBe(text);
+  expect(sanitizeState({ version: 1, page: {} }).page.text).toBe('');
+  const raw = { body: '<path d="M0 0L10 10"/>', events: [], duration: 1, stats: { motifs: 1, stems: 1, cells: 1 } };
+  const settings = { version: 1 as const, ...initialState.page };
+  const blank = composeContinuousPage(settings, raw, 0);
+  const written = composeContinuousPage({ ...settings, text }, raw, 0, true);
+  expect(written.svg).toContain('&lt;svg');
+  expect(written.svg).not.toContain('<svg onload');
+  expect(written.svg).toContain('Для тебя &amp; меня');
+  expect(written.svg).toContain('data-page-text="true"');
+  expect(written.timeline?.svg).toBe(written.svg);
+  expect(written.stats).toEqual(blank.stats);
+  expect(written.svg.match(/<path[^>]+>/g)).toEqual(blank.svg.match(/<path[^>]+>/g));
+  expect(withoutPageText(written.svg)).not.toContain('data-page-text="true"');
+  expect(pageTextSvg('', settings.rect, settings.ink)).toBe('');
+});
+
+test('text wraps words, breaks long words, preserves paragraphs and shrinks into small regions', () => {
+  const rect = { x: 20, y: 20, width: 40, height: 40 };
+  const short = layoutPageText('Привет\nмир', rect);
+  expect(short.lines).toEqual(['Привет', 'мир']);
+  for (const text of ['Ш'.repeat(2000), 'Длинный текст '.repeat(150), '\n'.repeat(1999), '🌷'.repeat(1000)]) {
+    const layout = layoutPageText(text, rect);
+    expect(layout.fontSize).toBeGreaterThan(0);
+    expect(layout.lines.length * layout.lineHeight).toBeLessThanOrEqual(rect.height - 12 + 1e-8);
+    expect(layout.y).toBeGreaterThan(rect.y);
+    expect(layout.y + (layout.lines.length - 1) * layout.lineHeight).toBeLessThan(rect.y + rect.height);
+    expect(layout.fontSize).toBeLessThan(short.fontSize);
+  }
+  expect(normalizePageText('А\r\nБ\u0001')).toBe('А\nБ');
+  expect([...normalizePageText('🌷'.repeat(2001))]).toHaveLength(2000);
+});

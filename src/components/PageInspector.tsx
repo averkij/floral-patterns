@@ -2,6 +2,7 @@ import { constrainRect, type PageConfig, type Visitor } from '../state';
 import { Check, ColorControls, Section, SeedControl, Slider } from './Controls';
 import { FLOWERS, defaultFlowerColors } from '../flowers';
 import FlowerGlyph from './FlowerGlyph';
+import VisitorGlyph from './VisitorGlyph';
 
 const visitors: [Visitor, string][] = [
   ['butterfly', 'Бабочки'],
@@ -81,17 +82,20 @@ export default function PageInspector({
           ))}
         </div>
       </Section>
-      <Section title="Сад">
+      <Section title="Стиль">
         <div className="segmented" role="group" aria-label="Время года">
           {(['spring', 'summer', 'autumn'] as const).map(season =>
             <button key={season} aria-pressed={settings.season === season} onClick={() => update({ season })}>
               {{ spring: 'Весна', summer: 'Лето', autumn: 'Осень' }[season]}
             </button>)}
         </div>
-        <div className="visitor-options" role="group" aria-label="Посетители">
+      </Section>
+      <Section title="Объекты">
+        <div className="flower-grid visitor-options" role="group" aria-label="Объекты">
           {visitors.map(([key, label]) => (
-            <button
+            <button className="flower-select visitor-select"
               key={key}
+              aria-label={label}
               aria-pressed={settings.visitors.includes(key)}
               onClick={() =>
                 update({
@@ -100,11 +104,16 @@ export default function PageInspector({
                     : [...settings.visitors, key],
                 })
               }
-            >{label}</button>
+            >
+              <VisitorGlyph visitor={key} />
+              <span className="flower-name">{label}</span>
+              {settings.visitors.includes(key) && <span className="flower-selected" aria-hidden="true">✓</span>}
+            </button>
           ))}
         </div>
       </Section>
-      <Section title="Свободная область">
+      <Section title="Область текста">
+        <button className="edit-page-text" onClick={() => document.getElementById('page-text')?.focus()}>Редактировать текст</button>
         <div className="dimension-grid">
           {(['width', 'height', 'x', 'y'] as const).map((key) => (
             <label key={key}>

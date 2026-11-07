@@ -39,6 +39,11 @@ export default function FieldNotes({ onClose }: { onClose: () => void }) {
           on the seed. Disabling one can leave the space it would have occupied.
         </p>
         <p>
+          Choose from eight illustrated flowers, each with its own editable bloom color. The seed
+          picks up to four selected varieties for each garden. Flower colors stay independent of
+          the ink palette; seasonal buds and seed heads retain the botanical engine’s styling.
+        </p>
+        <p>
           Watch growth follows Florilegium’s timed stems, opening flowers and arriving visitors.
           Replay grows the same seed again; turn Watch growth off for a quicker finished proof.
         </p>

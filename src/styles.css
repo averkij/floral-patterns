@@ -247,6 +247,37 @@ input::-webkit-inner-spin-button {
   box-shadow: 0 3px 7px #242a2310;
   max-height: 695px;
 }
+.flower-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.flower-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+}
+.flower-row .check {
+  margin: 0;
+  flex: 1;
+}
+.flower-row .flower-color {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+}
+.reset-flower-colors {
+  border: 0;
+  font-size: 12px;
+  padding: 5px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.flower-intro {
+  margin-top: 0;
+}
 .pattern-image {
   display: block;
   width: 100%;
@@ -648,6 +679,11 @@ input::-webkit-inner-spin-button {
 }
 .actions {
   margin-top: 1px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 12px 0;
+  background: var(--paper);
 }
 .growth-controls {
   display: flex;

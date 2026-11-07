@@ -1,5 +1,6 @@
 import { constrainRect, type PageConfig, type Visitor } from '../state';
 import { Check, ColorControls, Section, SeedControl, Slider } from './Controls';
+import { FLOWERS, defaultFlowerColors } from '../flowers';
 
 const visitors: [Visitor, string][] = [
   ['butterfly', 'Butterflies'],
@@ -44,6 +45,42 @@ export default function PageInspector({
         </div>
       </Section>
       <ColorControls palette={settings} onChange={update} />
+      <Section title="Flowers">
+        <p className="help-text flower-intro">Choose your varieties and their bloom colors.</p>
+        <div className="flower-list">
+          {FLOWERS.map(flower => (
+            <div className="flower-row" key={flower.id}>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={settings.flowers.includes(flower.id)}
+                  disabled={settings.flowers.length === 1 && settings.flowers[0] === flower.id}
+                  onChange={(event) => update({
+                    flowers: FLOWERS.filter(f => f.id === flower.id
+                      ? event.target.checked
+                      : settings.flowers.includes(f.id)).map(f => f.id),
+                  })}
+                />
+                <span>{flower.label}</span>
+              </label>
+              <label className="color-well flower-color" style={{ backgroundColor: settings.flowerColors[flower.id] }}>
+                <input
+                  type="color"
+                  aria-label={`${flower.label} flower color`}
+                  value={settings.flowerColors[flower.id]}
+                  onChange={(event) => update({
+                    flowerColors: { ...settings.flowerColors, [flower.id]: event.target.value },
+                  })}
+                />
+              </label>
+            </div>
+          ))}
+        </div>
+        <button className="reset-flower-colors" onClick={() => update({ flowerColors: { ...defaultFlowerColors } })}>
+          Reset flower colors
+        </button>
+        <p className="help-text">Keep at least one selected. The seed picks up to four varieties per garden. Spring and autumn may show buds or seed heads.</p>
+      </Section>
       <Section title="Garden">
         <label className="select-row">
           <span>Season</span>

@@ -1,3 +1,5 @@
+import { FLOWERS, defaultFlowerColors, isFlower, type Flower, type FlowerColors } from './flowers';
+
 export type Palette = { ink: string; accent: string; paper: string };
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Visitor = 'butterfly' | 'bee' | 'bird' | 'snail';
@@ -7,6 +9,8 @@ export type PageConfig = Palette & {
   season: 'spring' | 'summer' | 'autumn';
   rect: Rect;
   visitors: Visitor[];
+  flowers: Flower[];
+  flowerColors: FlowerColors;
   showFrame: boolean;
 };
 export type ShapeConfig = Palette & {
@@ -39,6 +43,8 @@ export const initialState: StudioState = {
     accent: '#b99455',
     paper: '#fffefa',
     visitors: ['butterfly', 'bee', 'bird', 'snail'],
+    flowers: FLOWERS.map(f => f.id),
+    flowerColors: { ...defaultFlowerColors },
     showFrame: true,
   },
   shape: {
@@ -91,6 +97,13 @@ export function sanitizeState(raw: unknown): StudioState {
     p.density = number(page.density, 1, 0.2, 1);
     if (['spring', 'summer', 'autumn'].includes(page.season)) p.season = page.season;
     for (const key of ['ink', 'accent', 'paper'] as const) p[key] = color(page[key], p[key]);
+    if (Array.isArray(page.flowers)) {
+      const selected = page.flowers.filter(isFlower);
+      if (selected.length) p.flowers = FLOWERS.filter(f => selected.includes(f.id)).map(f => f.id);
+    }
+    if (page.flowerColors && typeof page.flowerColors === 'object') {
+      for (const f of FLOWERS) p.flowerColors[f.id] = color(page.flowerColors[f.id], f.color);
+    }
     if (Array.isArray(page.visitors))
       p.visitors = [
         ...new Set(page.visitors.filter((v) => ['butterfly', 'bee', 'bird', 'snail'].includes(v))),

@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { constrainRect, initialState, loadState, sanitizeState, serializeState } from './state';
 import { validatePageSettings } from './engines/page-adapter';
+import { defaultFlowerColors } from './flowers';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -78,6 +79,8 @@ test('a shared configuration reproduces both demos, including custom outline, Un
   state.page.seed = 2147483646;
   state.page.density = 0.25;
   state.page.visitors = [];
+  state.page.flowers = ['rose', 'tulip', 'pansy'];
+  state.page.flowerColors.rose = '#a14bd2';
   state.page.rect = { x: 57.125, y: 61.625, width: 82.25, height: 150.125 };
   state.page.showFrame = false;
   state.shape.kind = 'custom';
@@ -97,4 +100,19 @@ test('a shared configuration reproduces both demos, including custom outline, Un
   const restored = loadState();
   expect(restored).toEqual(state);
   expect(serializeState(restored)).toBe(hash);
+});
+
+test('legacy links gain flower defaults; untrusted selections and colors are sanitized', () => {
+  const legacy = sanitizeState({ version: 1, page: { seed: 17 } });
+  expect(legacy.page.flowers).toEqual(initialState.page.flowers);
+  expect(legacy.page.flowerColors).toEqual(defaultFlowerColors);
+  const restored = sanitizeState({ version: 1, page: {
+    flowers: ['pansy', 'unknown', null, 'rose', 'rose'],
+    flowerColors: { rose: '#123456', pansy: 'red";error(1)' },
+  } });
+  expect(restored.page.flowers).toEqual(['rose', 'pansy']);
+  expect(restored.page.flowerColors).toEqual({ ...defaultFlowerColors, rose: '#123456' });
+  expect(sanitizeState({ version: 1, page: { flowers: [] } }).page.flowers).toEqual(initialState.page.flowers);
+  restored.page.flowerColors.tulip = '#000000';
+  expect(initialState.page.flowerColors.tulip).toBe(defaultFlowerColors.tulip);
 });

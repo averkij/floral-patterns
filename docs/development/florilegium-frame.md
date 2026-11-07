@@ -1,5 +1,7 @@
 # Florilegium continuous A4 garden
 
+The current adapter is `florilegium-continuous-v3` (2026-11-07), adding [eight selectable illustrated flowers and independent bloom colors](flower-selection.md). The continuous-domain and playback design below still applies. Version 1 settings now also carry `flowers` and `flowerColors`; older UI links receive the new defaults. Exact reproduction of earlier outputs requires the earlier code revision.
+
 Implemented as `florilegium-continuous-v2` on 2026-11-06, using Florilegium revision `9fbaf56d53e6525e02da05cd802ea7da82052099` (release 2.0.1). The entry point is [page-engine.ts](../../src/engines/page-engine.ts). This replaces the experimental `florilegium-frame-v1` adapter, which assembled four rotated gardens and exposed visible composition seams.
 
 ## Source behavior and the continuous domain

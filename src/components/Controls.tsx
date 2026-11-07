@@ -198,6 +198,7 @@ export function Actions({
   onExport,
   onShare,
   shareLabel,
+  children,
 }: {
   busy: boolean;
   growDisabled?: boolean;
@@ -206,6 +207,7 @@ export function Actions({
   onExport: () => void;
   onShare: () => void;
   shareLabel: string;
+  children?: ReactNode;
 }) {
   return (
     <div className="actions">
@@ -219,6 +221,7 @@ export function Actions({
         </button>
         <button onClick={onShare}>{shareLabel}</button>
       </div>
+      {children}
     </div>
   );
 }

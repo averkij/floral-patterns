@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "d3-delaunay": "^6.0.6",
+    "mediabunny": "1.65.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "wasmoon": "^1.16.0"

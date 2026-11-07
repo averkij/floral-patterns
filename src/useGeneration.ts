@@ -3,7 +3,7 @@ import { createPageEngine, type PageResult, type PageTimeline } from './engines/
 import { generationError } from './i18n';
 import type { StudioState } from './state';
 
-export type Generated = { svg: string; outline: string; detail: string; key: string };
+export type Generated = { svg: string; outline: string; detail: string; key: string; timeline?: PageTimeline };
 const empty: Generated = { svg: '', outline: '', detail: '', key: '' };
 export function useGeneration(state: StudioState, paused: boolean, watchGrowth = true) {
   const [outputs, setOutputs] = useState({ page: empty, shape: empty });
@@ -57,7 +57,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
     };
     const presentPage = (result: PageResult) => {
       if (!active) return;
-      const generated = { svg: result.svg, outline: '', detail: 'Цветочник А4 · Florilegium', key };
+      const generated = { svg: result.svg, outline: '', detail: 'Цветочник А4 · Florilegium', key, timeline: result.timeline };
       setOutputs(previous => ({ ...previous, page: generated }));
       if (request.animate && result.timeline) {
         setPlayback({ timeline: result.timeline, request });
@@ -81,7 +81,7 @@ export function useGeneration(state: StudioState, paused: boolean, watchGrowth =
             (progress) => {
               if (active) setStatus(progress.stage === 'loading' ? 'Загружаем генератор…' : 'Создаём узор…');
             },
-            request.animate,
+            true, // Retain the compact schedule for export even when live playback is off.
           );
           engine.dispose();
           if (!active) return;

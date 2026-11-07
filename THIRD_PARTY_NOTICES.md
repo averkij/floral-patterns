@@ -16,6 +16,10 @@ The built site includes the source modules and notices in `vendor/florilegium/`:
 
 The browser runs Lua through [Wasmoon](https://github.com/ceifa/wasmoon), copyright (c) 2023 Gabriel Francisco, MIT license. Its version is fixed by `package-lock.json`. The published site includes the unmodified WebAssembly runtime, the Wasmoon license and the Lua MIT license in `vendor/wasmoon/`. Wasmoon's JavaScript interface is bundled by Vite.
 
+## Mediabunny
+
+Browser video export uses unmodified [Mediabunny](https://github.com/Vanilagy/mediabunny), version 1.65.2, under the Mozilla Public License 2.0. Its JavaScript is bundled in a separate export chunk. The exact corresponding source, including TypeScript sources and the license, is available in the [1.65.2 npm source package](https://registry.npmjs.org/mediabunny/-/mediabunny-1.65.2.tgz). The published site also includes the license in `licenses/mediabunny/LICENSE` and notices for its runtime dependencies. This repository's MIT license does not replace those terms.
+
 ## IM FELL DW Pica
 
 The roman and italic WOFF2 files are the subsets distributed by Florilegium, from Igino Marini's IM FELL DW Pica revival. Copyright (c) 2010 Igino Marini. They use the SIL Open Font License 1.1, without Reserved Font Names. The site includes the original `OFL.txt` and upstream font provenance in `fonts/`.

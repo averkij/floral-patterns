@@ -14,6 +14,8 @@ Both demos have explicit seeds, versioned settings, shareable hash links and SVG
 
 The initial canvas and every edit are drafts. Press **Grow pattern** to apply the current seed and settings, including a moved/resized rectangle or a completed freehand region. The button shows activity during computation and growth playback. Preview controls offer **Fit** or **25–200%** zoom with scrolling for larger artwork; zoom changes the view, while exported artwork keeps its original dimensions.
 
+The page experiment also downloads its growth animation as **MP4**, with **WebM** fallback when the browser cannot encode H.264. Video includes the chosen paper, flowers, visitors and styled text at 764 × 1080, 30 fps. It renders entirely in the browser with progress and cancellation; live playback can be off. See [video export and browser limitations](docs/development/video-export.md).
+
 ## Run locally
 
 Use Node 24 and npm. Initialize the pinned reference implementation when cloning:

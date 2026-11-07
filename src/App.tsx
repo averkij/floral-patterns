@@ -4,6 +4,7 @@ import PageInspector from './components/PageInspector';
 import ShapeInspector from './components/ShapeInspector';
 import { PageSpecimen, ShapeSpecimen } from './components/Specimen';
 import CanvasViewport from './components/CanvasViewport';
+import VideoExport from './components/VideoExport';
 import { loadState, loadWatchGrowth, persistSettings, serializeState, type PageConfig, type ShapeConfig } from './state';
 import { useGeneration } from './useGeneration';
 
@@ -153,7 +154,9 @@ export default function App() {
             onExport={download}
             onShare={share}
             shareLabel={shareLabel}
-          />
+          >
+            {page && <VideoExport timeline={output.timeline} disabled={busy || !current || dragging} seed={state.page.seed} />}
+          </Actions>
         </aside>
       </main>
     </div>

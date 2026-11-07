@@ -1,5 +1,6 @@
 .canvas-viewport {
-  --canvas-scroll-limit: clamp(280px, calc(100dvh - 330px), 900px);
+  --canvas-scroll-limit: max(180px, calc(100dvh - 170px));
+  --canvas-chrome-height: 66px;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -9,32 +10,17 @@
   padding-bottom: 12px;
 }
 
-.canvas-view-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-height: 39px;
-  border-bottom: 1px solid var(--light-rule);
-  padding: 0 0 7px;
-}
-
-.canvas-view-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-.canvas-view-hint {
-  font-size: 10px;
-  color: #747c69;
-}
-
 .canvas-zoom-controls {
+  grid-area: 1 / 1;
+  position: sticky;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  align-self: start;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 0;
-  margin-left: auto;
 }
 
 .canvas-zoom-controls button,
@@ -76,6 +62,7 @@
   min-width: 0;
   max-width: 100%;
   min-height: 0;
+  height: var(--canvas-scroll-limit);
   max-height: var(--canvas-scroll-limit);
   overflow: auto;
   overscroll-behavior: contain;
@@ -89,23 +76,26 @@
 }
 
 .canvas-scroll-content {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 100%;
-  padding: 19px 42px 14px;
-}
-
-.canvas-viewport-shape .canvas-scroll-content {
-  padding-left: 14px;
-  padding-right: 14px;
+  padding: 8px 8px 14px;
 }
 
 .canvas-stage-host {
+  --stage-gutter: 14px;
+  grid-area: 1 / 1;
+  justify-self: center;
+  margin-top: 44px;
+  padding: 0 var(--stage-gutter);
   display: flex;
   justify-content: center;
   width: 100%;
   min-width: 0;
+}
+
+.canvas-viewport-shape .canvas-stage-host {
+  --stage-gutter: 6px;
 }
 
 .canvas-viewport.is-zoomed .canvas-scroll-content {
@@ -113,8 +103,7 @@
 }
 
 .canvas-viewport.is-zoomed .canvas-stage-host {
-  width: var(--canvas-preview-width);
-  flex: 0 0 var(--canvas-preview-width);
+  width: calc(var(--canvas-preview-width) + 2 * var(--stage-gutter));
 }
 
 .canvas-viewport.is-zoomed .page-stage,
@@ -129,20 +118,24 @@
   max-height: none;
 }
 
-@media (min-width: 681px) {
-  .canvas-viewport-page.is-fit .page-stage {
-    /* Reserve the scroll padding, page label and caption before fitting A4. */
-    max-width: min(100%, calc((var(--canvas-scroll-limit) - 110px) * 0.70707));
-  }
+.canvas-viewport-page.is-fit .page-stage {
+  width: min(100%, calc((var(--canvas-scroll-limit) - var(--canvas-chrome-height)) * 210 / 297));
+  max-width: none;
+}
+
+.canvas-viewport-shape.is-fit .shape-stage {
+  width: min(100%, calc(var(--canvas-scroll-limit) - var(--canvas-chrome-height)));
+  max-width: none;
+}
+
+.canvas-viewport.is-fit .a4-paper {
+  max-height: none;
 }
 
 @media (max-width: 680px) {
   .canvas-viewport {
-    --canvas-scroll-limit: 70dvh;
-  }
-
-  .canvas-view-hint {
-    display: none;
+    --canvas-scroll-limit: max(180px, calc(100dvh - 155px));
+    --canvas-chrome-height: 72px;
   }
 
   .canvas-zoom-controls button,
@@ -155,21 +148,12 @@
     width: 36px;
   }
 
-  .canvas-scroll-content {
-    padding: 16px 24px 14px;
+  .canvas-stage-host {
+    --stage-gutter: 16px;
+    margin-top: 50px;
   }
 
-  .canvas-viewport-page .canvas-scroll-content {
-    padding-left: 42px;
-  }
-
-  .canvas-viewport-shape .canvas-scroll-content {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .canvas-viewport.is-zoomed.canvas-viewport-shape .canvas-scroll-content {
-    padding-left: 12px;
-    padding-right: 12px;
+  .canvas-viewport-shape .canvas-stage-host {
+    --stage-gutter: 4px;
   }
 }

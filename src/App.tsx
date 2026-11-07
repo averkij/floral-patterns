@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Actions, Icon } from './components/Controls';
+import { Actions } from './components/Controls';
 import PageInspector from './components/PageInspector';
 import ShapeInspector from './components/ShapeInspector';
 import { PageSpecimen, ShapeSpecimen } from './components/Specimen';
-import FieldNotes from './components/FieldNotes';
 import CanvasViewport from './components/CanvasViewport';
 import { loadState, serializeState, type PageConfig, type ShapeConfig } from './state';
 import { useGeneration } from './useGeneration';
 
 export default function App() {
   const [state, setState] = useState(loadState),
-    [notes, setNotes] = useState(false),
     [drawing, setDrawing] = useState(false),
     [dragging, setDragging] = useState(false),
     [watchGrowth, setWatchGrowth] = useState(
@@ -70,13 +68,7 @@ export default function App() {
   return (
     <div className="studio-shell">
       <header className="masthead">
-        <a href={import.meta.env.BASE_URL} className="wordmark" aria-label="Floralia home">
-          Floralia
-        </a>
-        <p>A study in growing ornament</p>
-        <button className="notes-trigger" onClick={() => setNotes(true)}>
-          Field notes <Icon name="external" size={18} />
-        </button>
+        <h1 className="wordmark">Algo Floral Patterns</h1>
       </header>
       <nav className="workspace-tabs" aria-label="Experiments">
         <button
@@ -107,14 +99,6 @@ export default function App() {
           className={`workspace ${page ? 'page-workspace' : 'shape-workspace'}`}
           aria-label={page ? 'Page garden workspace' : 'Shape and letter workspace'}
         >
-          <div className="workspace-heading">
-            <h1>{page ? 'Room to grow.' : 'An outline. A thousand possibilities.'}</h1>
-            <p>
-              {page
-                ? 'Floral borders, composed around your words.'
-                : 'Let a shape become a garden.'}
-            </p>
-          </div>
           <CanvasViewport kind={page ? 'page' : 'shape'}>
             {page ? (
               <PageSpecimen
@@ -139,30 +123,6 @@ export default function App() {
               />
             )}
           </CanvasViewport>
-          <div
-            className={`generation-status ${error ? 'has-error' : ''}`}
-            role="status"
-            aria-live="polite"
-          >
-            {busy && <span className="activity" />}
-            {error ? (
-              <>
-                <span>{error}</span>
-                <button onClick={grow}>Try again</button>
-              </>
-            ) : busy ? (
-              status
-            ) : drawing ? (
-              'Drawing a new region'
-            ) : output.svg && current ? (
-              output.detail
-            ) : (
-              status
-            )}
-            <span className="method-name">
-              {page ? 'Space-seeking growth' : 'Cell-based composition'}
-            </span>
-          </div>
         </section>
         <aside className="inspector" aria-label="Pattern settings">
           <div className="inspector-fields">
@@ -184,6 +144,8 @@ export default function App() {
               />
             )}
           </div>
+          <span className="sr-only" role="status">{busy ? status : ''}</span>
+          {error && <p className="generation-error" role="alert">{error}</p>}
           <Actions
             busy={busy}
             growDisabled={dragging}
@@ -195,11 +157,6 @@ export default function App() {
           />
         </aside>
       </main>
-      <footer className="studio-footer">
-        <span>Floral patterns / Experiment {page ? '01' : '02'}</span>
-        <span>Made of rules. Grown by chance.</span>
-      </footer>
-      {notes && <FieldNotes onClose={() => setNotes(false)} />}
     </div>
   );
 }

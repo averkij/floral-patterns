@@ -59,101 +59,71 @@ export function PageSpecimen({
   };
   return (
     <div className="page-stage">
-      <div className="page-label">A4 / 210 × 297 mm</div>
-      <div className="page-with-ruler">
-        <div className="ruler" aria-hidden="true">
-          {[0, 50, 100, 150, 200, 250, 297].map((n) => (
-            <span key={n} style={{ top: `${(n / 297) * 100}%` }}>
-              {n}
-            </span>
-          ))}
-        </div>
-        <div className="a4-paper" style={{ backgroundColor: settings.paper }}>
-          {url ? (
-            <img
-              className="pattern-image"
-              src={url}
-              alt="Generated A4 floral garden surrounding a reserved rectangle"
-              draggable={false}
+      <div className="a4-paper" style={{ backgroundColor: settings.paper }}>
+        {url && (
+          <img
+            className="pattern-image"
+            src={url}
+            alt="Generated A4 floral garden surrounding a reserved rectangle"
+            draggable={false}
+          />
+        )}
+        {timeline && (
+          <PageGrowthPreview timeline={timeline} onComplete={onPlaybackComplete} onProgress={onPlaybackProgress} />
+        )}
+        {settings.showFrame && (
+          <svg
+            className="frame-overlay"
+            ref={surface}
+            viewBox="0 0 210 297"
+            onPointerMove={move}
+            onPointerUp={end}
+            onPointerCancel={end}
+            onLostPointerCapture={end}
+          >
+            <rect
+              className="reserved-rect"
+              x={rect.x}
+              y={rect.y}
+              width={rect.width}
+              height={rect.height}
+              onPointerDown={(e) => begin(e, 'move')}
+              tabIndex={0}
+              role="button"
+              aria-label="Move reserved rectangle. Use arrow keys, or edit dimensions in Reserved space."
+              onKeyDown={(e) => {
+                const delta: Record<string, [number, number]> = {
+                  ArrowLeft: [-1, 0],
+                  ArrowRight: [1, 0],
+                  ArrowUp: [0, -1],
+                  ArrowDown: [0, 1],
+                };
+                if (delta[e.key]) {
+                  e.preventDefault();
+                  const [dx, dy] = delta[e.key];
+                  update({
+                    rect: constrainRect({
+                      ...rect,
+                      x: rect.x + dx * (e.shiftKey ? 5 : 1),
+                      y: rect.y + dy * (e.shiftKey ? 5 : 1),
+                    }),
+                  });
+                }
+              }}
             />
-          ) : !timeline ? (
-            <div className="empty-specimen">
-              <span>
-                Every garden begins
-                <br />
-                with a little space.
-              </span>
-            </div>
-          ) : null}
-          {timeline && (
-            <PageGrowthPreview timeline={timeline} onComplete={onPlaybackComplete} onProgress={onPlaybackProgress} />
-          )}
-          {settings.showFrame && (
-            <svg
-              className="frame-overlay"
-              ref={surface}
-              viewBox="0 0 210 297"
-              onPointerMove={move}
-              onPointerUp={end}
-              onPointerCancel={end}
-              onLostPointerCapture={end}
-            >
+            {(['nw', 'ne', 'se', 'sw'] as const).map((handle) => (
               <rect
-                className="reserved-rect"
-                x={rect.x}
-                y={rect.y}
-                width={rect.width}
-                height={rect.height}
-                onPointerDown={(e) => begin(e, 'move')}
-                tabIndex={0}
-                role="button"
-                aria-label="Move reserved rectangle. Use arrow keys, or edit dimensions in Reserved space."
-                onKeyDown={(e) => {
-                  const delta: Record<string, [number, number]> = {
-                    ArrowLeft: [-1, 0],
-                    ArrowRight: [1, 0],
-                    ArrowUp: [0, -1],
-                    ArrowDown: [0, 1],
-                  };
-                  if (delta[e.key]) {
-                    e.preventDefault();
-                    const [dx, dy] = delta[e.key];
-                    update({
-                      rect: constrainRect({
-                        ...rect,
-                        x: rect.x + dx * (e.shiftKey ? 5 : 1),
-                        y: rect.y + dy * (e.shiftKey ? 5 : 1),
-                      }),
-                    });
-                  }
-                }}
+                key={handle}
+                className={`frame-handle ${handle}`}
+                x={(handle.includes('w') ? rect.x : rect.x + rect.width) - 2.1}
+                y={(handle.includes('n') ? rect.y : rect.y + rect.height) - 2.1}
+                width="4.2"
+                height="4.2"
+                onPointerDown={(e) => begin(e, handle)}
               />
-              <text
-                x={rect.x + rect.width / 2}
-                y={rect.y + rect.height / 2}
-                textAnchor="middle"
-                className="reserved-label"
-              >
-                A little space for possibility.
-              </text>
-              {(['nw', 'ne', 'se', 'sw'] as const).map((handle) => (
-                <rect
-                  key={handle}
-                  className={`frame-handle ${handle}`}
-                  x={(handle.includes('w') ? rect.x : rect.x + rect.width) - 2.1}
-                  y={(handle.includes('n') ? rect.y : rect.y + rect.height) - 2.1}
-                  width="4.2"
-                  height="4.2"
-                  onPointerDown={(e) => begin(e, handle)}
-                />
-              ))}
-            </svg>
-          )}
-        </div>
-      </div>
-      <div className="specimen-caption">
-        <span>Seed {String(settings.seed).padStart(4, '0')}</span>
-        <span>Drag the frame to reserve space</span>
+            ))}
+          </svg>
+        )}
       </div>
     </div>
   );
@@ -187,33 +157,17 @@ export function ShapeSpecimen({
   };
   return (
     <div className="shape-stage">
-      <div className="artboard-top">
-        <span>
-          {settings.kind === 'text'
-            ? `Letter / ${settings.text || '—'}`
-            : settings.kind === 'custom'
-              ? 'Your outline'
-              : `Shape / ${settings.kind}`}
-        </span>
-        <span>{settings.showCells ? 'Cell structure' : '800 × 800'}</span>
-      </div>
       <div
         className={`shape-paper ${drawing ? 'drawing' : ''}`}
         style={{ backgroundColor: settings.paper }}
       >
-        {url ? (
+        {url && (
           <img
             className="pattern-image"
             src={url}
             alt="Floral pattern filling the selected shape"
             draggable={false}
           />
-        ) : (
-          <div className="empty-specimen">
-            <span>
-              {drawing ? 'Draw a space for something beautiful.' : 'An outline, ready to bloom.'}
-            </span>
-          </div>
         )}
         <svg
           className={`shape-overlay ${drawing ? 'active' : ''}`}
@@ -283,14 +237,6 @@ export function ShapeSpecimen({
             {hint || 'Drag to draw. Release to close the outline.'}
           </div>
         )}
-      </div>
-      <div className="specimen-caption">
-        <span>Seed {String(settings.seed).padStart(4, '0')}</span>
-        <span>
-          {drawing
-            ? 'Your next garden starts here'
-            : 'Choose a shape, type a letter, or draw your own.'}
-        </span>
       </div>
     </div>
   );

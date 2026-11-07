@@ -47,7 +47,7 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
     const element = viewport.current;
     if (element) {
       pendingCenter.current = {
-        x: (element.scrollLeft + element.clientWidth / 2) / element.scrollWidth,
+        x: 0.5,
         y: (element.scrollTop + element.clientHeight / 2) / element.scrollHeight,
       };
     }
@@ -74,23 +74,6 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
 
   return (
     <div className={`canvas-viewport canvas-viewport-${kind} ${fitting ? 'is-fit' : 'is-zoomed'}`} style={style}>
-      <div className="canvas-view-toolbar" aria-label="Preview controls">
-        <span className="canvas-view-label">View</span>
-        <span className="canvas-view-hint">{fitting ? 'Fit to workspace' : 'Scroll to explore'}</span>
-        <div className="canvas-zoom-controls">
-          <button type="button" onClick={() => step(-1)} disabled={effectiveZoom <= 25} aria-label="Zoom out" title="Zoom out">−</button>
-          <select
-            aria-label="Preview zoom"
-            value={zoom === null ? 'fit' : String(zoom)}
-            onChange={event => event.target.value === 'fit' ? fit() : changeZoom(Number(event.target.value))}
-          >
-            <option value="fit">Fit</option>
-            {ZOOM_LEVELS.map(level => <option value={level} key={level}>{level}%</option>)}
-          </select>
-          <button type="button" onClick={() => step(1)} disabled={effectiveZoom >= 200} aria-label="Zoom in" title="Zoom in">+</button>
-          <button type="button" className="canvas-fit-button" onClick={fit} aria-pressed={fitting}>Fit</button>
-        </div>
-      </div>
       <div
         className="canvas-scrollport"
         ref={viewport}
@@ -99,6 +82,19 @@ export default function CanvasViewport({ kind, children }: { kind: CanvasKind; c
         tabIndex={0}
       >
         <div className="canvas-scroll-content">
+          <div className="canvas-zoom-controls" role="group" aria-label="Preview controls">
+            <button type="button" onClick={() => step(-1)} disabled={effectiveZoom <= 25} aria-label="Zoom out" title="Zoom out">−</button>
+            <select
+              aria-label="Preview zoom"
+              value={zoom === null ? 'fit' : String(zoom)}
+              onChange={event => event.target.value === 'fit' ? fit() : changeZoom(Number(event.target.value))}
+            >
+              <option value="fit">Fit</option>
+              {ZOOM_LEVELS.map(level => <option value={level} key={level}>{level}%</option>)}
+            </select>
+            <button type="button" onClick={() => step(1)} disabled={effectiveZoom >= 200} aria-label="Zoom in" title="Zoom in">+</button>
+            <button type="button" className="canvas-fit-button" onClick={fit} aria-pressed={fitting}>Fit</button>
+          </div>
           <div className="canvas-stage-host" ref={stage}>{children}</div>
         </div>
       </div>
